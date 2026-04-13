@@ -17,6 +17,8 @@ build/
 .venv
 env/
 venv/
+.env.local
+.env.production
 
 # ========================
 # CREDENTIALS & SECRETS ⚠️
@@ -26,6 +28,7 @@ config/google_credentials.json.json
 *.json.json
 data/mappings/country_rate.json
 data/mappings/raw_modal.xlsx
+config/database.py
 
 # ========================
 # DATA RAW (jangan commit)
@@ -34,6 +37,9 @@ data/raw/
 data/output/
 cek.py
 asuransi.py
+runner.py
+run_report.py
+run_margin.py
 
 # ========================
 # LOGS
