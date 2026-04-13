@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>eSIM Pricing Pipeline — Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,300;9..144,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f7f5f0;
+      --surface: #ffffff;
+      --surface2: #f0ede6;
+      --ink: #1a1814;
+      --ink2: #5a5650;
+      --ink3: #9a9590;
+      --accent: #2d5016;
+      --accent-light: #e8f0e0;
+      --accent2: #8b3a1c;
+      --accent2-light: #f5e8e2;
+      --border: rgba(26,24,20,0.10);
+      --mono: 'DM Mono', monospace;
+      --display: 'Fraunces', serif;
+      --body: 'DM Sans', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--body);
+      background: var(--bg);
+      color: var(--ink);
+      font-size: 16px;
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(247,245,240,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--ink2);
+      text-decoration: none;
+    }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a {
+      font-size: 13px; color: var(--ink2);
+      text-decoration: none; transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--ink); }
+
+    /* HERO */
+    .hero {
+      padding: 120px 2rem 80px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .hero-eyebrow {
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--accent-light);
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 4px;
+      margin-bottom: 1.5rem;
+    }
+    .hero h1 {
+      font-family: var(--display);
+      font-size: clamp(36px, 6vw, 64px);
+      font-weight: 300;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      margin-bottom: 1.5rem;
+    }
+    .hero h1 em {
+      font-style: italic;
+      color: var(--accent);
+    }
+    .hero-desc {
+      font-size: 18px;
+      color: var(--ink2);
+      max-width: 600px;
+      line-height: 1.75;
+      margin-bottom: 2.5rem;
+    }
+    .hero-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 3rem; }
+    .badge {
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      color: var(--ink2);
+      background: var(--surface);
+    }
+
+    /* METRICS */
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 5rem;
+    }
+    .metric {
+      background: var(--surface);
+      padding: 2rem;
+      opacity: 0;
+      transform: translateY(12px);
+      animation: fadeUp 0.5s forwards;
+    }
+    .metric:nth-child(2) { animation-delay: 0.1s; }
+    .metric:nth-child(3) { animation-delay: 0.2s; }
+    .metric-val {
+      font-family: var(--display);
+      font-size: 40px;
+      font-weight: 300;
+      color: var(--ink);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .metric-label { font-size: 13px; color: var(--ink3); }
+
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* LAYOUT */
+    .container { max-width: 900px; margin: 0 auto; padding: 0 2rem; }
+    .section { margin-bottom: 6rem; }
+    .section-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink3);
+      margin-bottom: 2rem;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    h2 {
+      font-family: var(--display);
+      font-size: 28px;
+      font-weight: 300;
+      color: var(--ink);
+      margin-bottom: 1rem;
+    }
+
+    /* PIPELINE */
+    .pipeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .pipe-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 1.5rem;
+      padding: 1.5rem 2rem;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      transition: background 0.2s;
+    }
+    .pipe-step:last-child { border-bottom: none; }
+    .pipe-step:hover { background: var(--surface2); }
+    .pipe-num {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--ink3);
+      min-width: 24px;
+      margin-top: 3px;
+    }
+    .pipe-content { flex: 1; }
+    .pipe-name {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+    .pipe-desc { font-size: 13px; color: var(--ink2); line-height: 1.6; }
+
+    /* CARDS */
+    .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .card {
+      background: var(--surface);
+      padding: 2rem;
+      transition: background 0.2s;
+    }
+    .card:hover { background: var(--surface2); }
+    .card-icon {
+      width: 32px; height: 32px;
+      background: var(--accent-light);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 1rem;
+      font-size: 16px;
+    }
+    .card h3 {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+    .card p { font-size: 13px; color: var(--ink2); line-height: 1.7; }
+
+    /* TIER TABLE */
+    .tier-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .tier-table th {
+      text-align: left;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink3);
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .tier-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      color: var(--ink2);
+      vertical-align: top;
+    }
+    .tier-table tr:last-child td { border-bottom: none; }
+    .tier-table tr:hover td { background: var(--surface2); }
+    .tier-name { font-family: var(--mono); font-size: 13px; color: var(--ink); }
+    .tier-badge {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-left: 8px;
+    }
+    .t-exact { background: var(--accent-light); color: var(--accent); }
+    .t-curve { background: var(--accent2-light); color: var(--accent2); }
+    .t-mid { background: var(--surface2); color: var(--ink2); }
+
+    /* CODE BLOCK */
+    pre {
+      background: #1a1814;
+      color: #d4cfc6;
+      font-family: var(--mono);
+      font-size: 13px;
+      padding: 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      line-height: 1.7;
+    }
+    .cm { color: #6a6560; }
+    .ck { color: #a8c480; }
+    .cv { color: #e8b877; }
+    .cs { color: #c4a882; }
+
+    /* STACK TABLE */
+    .stack { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .stack-row {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      border-bottom: 1px solid var(--border);
+    }
+    .stack-row:last-child { border-bottom: none; }
+    .stack-key {
+      padding: 14px 20px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--ink3);
+      background: var(--surface2);
+      display: flex; align-items: center;
+    }
+    .stack-val {
+      padding: 14px 20px;
+      font-size: 14px;
+      color: var(--ink2);
+      background: var(--surface);
+      display: flex; align-items: center;
+    }
+
+    /* IMPACT */
+    .impact {
+      background: var(--ink);
+      color: #f0ede6;
+      border-radius: 16px;
+      padding: 3rem;
+      margin-bottom: 6rem;
+    }
+    .impact-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #6a6560;
+      margin-bottom: 1.5rem;
+    }
+    .impact h2 {
+      font-family: var(--display);
+      font-size: 32px;
+      font-weight: 300;
+      color: #f0ede6;
+      margin-bottom: 1.5rem;
+      line-height: 1.3;
+    }
+    .impact h2 em { color: #a8c480; font-style: italic; }
+    .impact-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .impact-stat-val {
+      font-family: var(--display);
+      font-size: 36px;
+      font-weight: 300;
+      color: #a8c480;
+    }
+    .impact-stat-label { font-size: 13px; color: #6a6560; margin-top: 4px; }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem;
+      text-align: center;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--ink3);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 640px) {
+      .metrics { grid-template-columns: 1fr; }
+      .cards { grid-template-columns: 1fr; }
+      .impact-stats { grid-template-columns: 1fr; gap: 1.5rem; }
+      .stack-row { grid-template-columns: 120px 1fr; }
+      nav { padding: 0 1rem; }
+      .nav-links { gap: 1rem; }
+      .hero { padding: 100px 1rem 60px; }
+      .container { padding: 0 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="#" class="nav-logo">pricing-pipeline</a>
+  <div class="nav-links">
+    <a href="#pipeline">Pipeline</a>
+    <a href="#components">Components</a>
+    <a href="#stack">Stack</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">Data Engineering · Pricing Automation</div>
+  <h1>eSIM Pricing<br><em>Automation</em> Pipeline</h1>
+  <p class="hero-desc">
+    End-to-end system that generates competitive sell prices for 10,800+ SKUs based on real customer usage behaviour — replacing a fully manual pricing process.
+  </p>
+  <div class="hero-badges">
+    <span class="badge">Python</span>
+    <span class="badge">Pandas</span>
+    <span class="badge">NumPy</span>
+    <span class="badge">scikit-learn</span>
+    <span class="badge">SciPy</span>
+    <span class="badge">Google Sheets API</span>
+    <span class="badge">gspread</span>
+    <span class="badge">MCC Mapping</span>
+  </div>
+
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-val">10,800+</div>
+      <div class="metric-label">SKUs generated per run</div>
+    </div>
+    <div class="metric">
+      <div class="metric-val">5-tier</div>
+      <div class="metric-label">Interpolation fallback chain</div>
+    </div>
+    <div class="metric">
+      <div class="metric-val">~10%</div>
+      <div class="metric-label">Target gap vs. market</div>
+    </div>
+  </div>
+</section>
+
+<!-- PIPELINE -->
+<section class="container section" id="pipeline">
+  <p class="section-label">Architecture</p>
+  <h2>Pipeline overview</h2>
+  <p style="color: var(--ink2); margin-bottom: 2rem; font-size: 15px;">Seven stages from raw input to published prices — each stage is a separate Python module.</p>
+
+  <div class="pipeline">
+    <div class="pipe-step">
+      <span class="pipe-num">01</span>
+      <div class="pipe-content">
+        <div class="pipe-name">Raw data ingestion</div>
+        <div class="pipe-desc">Reads daily usage files (DAILY_USAGE_*.xlsx, BSN-*.xlsx) and subscription records. Normalises ICCID format, parses MCC-based area codes, converts usage to MB.</div>
+      </div>
+    </div>
+    <div class="pipe-step">
+      <span class="pipe-num">02</span>
+      <div class="pipe-content">
+        <div class="pipe-name">Subscription processor</div>
+        <div class="pipe-desc">Joins each subscription window to its daily usage records. Computes total usage, usage ratio, actual active days, and country-level consumption distribution per ICCID.</div>
+      </div>
+    </div>
+    <div class="pipe-step">
+      <span class="pipe-num">03</span>
+      <div class="pipe-content">
+        <div class="pipe-name">Behaviour factor engine</div>
+        <div class="pipe-desc">Aggregates usage ratios at package level using P50/P75 blend. Builds lookup tables for 5-tier interpolation. Applies QFF clamping and isotonic smoothing.</div>
+      </div>
+    </div>
+    <div class="pipe-step">
+      <span class="pipe-num">04</span>
+      <div class="pipe-content">
+        <div class="pipe-name">Full SKU matrix generator</div>
+        <div class="pipe-desc">Generates all combinations of (country × quota × duration days 1–30) for every known country. Countries with no historical data can be force-included via config.</div>
+      </div>
+    </div>
+    <div class="pipe-step">
+      <span class="pipe-num">05</span>
+      <div class="pipe-content">
+        <div class="pipe-name">Score interpolation</div>
+        <div class="pipe-desc">Assigns a behaviour score and confidence level to every SKU in the matrix using the 5-tier fallback chain. Stores source tier and sample count for downstream weighting.</div>
+      </div>
+    </div>
+    <div class="pipe-step">
+      <span class="pipe-num">06</span>
+      <div class="pipe-content">
+        <div class="pipe-name">Pricing calculation</div>
+        <div class="pipe-desc">Computes weighted modal cost per package from MCC-resolved country rates. Applies product-type-specific pricing formula. Outputs SIM, eSIM, and flat prices in IDR.</div>
+      </div>
+    </div>
+    <div class="pipe-step">
+      <span class="pipe-num">07</span>
+      <div class="pipe-content">
+        <div class="pipe-name">Google Sheets export</div>
+        <div class="pipe-desc">Clears and repopulates the PRICING_OUTPUT worksheet with the full SKU price table. Also exports summary reports and behaviour data to Excel files.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPONENTS -->
+<section class="container section" id="components">
+  <p class="section-label">Key components</p>
+  <h2>How it works</h2>
+
+  <!-- Interpolation tiers -->
+  <div style="margin-bottom: 3rem;">
+    <h3 style="font-size: 17px; font-weight: 500; margin-bottom: 1rem;">Behaviour score interpolation</h3>
+    <p style="font-size: 14px; color: var(--ink2); margin-bottom: 1.5rem; line-height: 1.7;">Every SKU in the 10,800+ matrix gets a behaviour score via a 5-tier fallback chain. The system tries the most specific source first, falling back to increasingly general estimates.</p>
+
+    <div style="border: 1px solid var(--border); border-radius: 12px; overflow: hidden;">
+      <table class="tier-table">
+        <thead>
+          <tr>
+            <th>Tier</th>
+            <th>Source</th>
+            <th>Condition</th>
+            <th>QFF weight</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="tier-name">EXACT</span> <span class="tier-badge t-exact">best</span></td>
+            <td>Same country + duration + quota</td>
+            <td>≥ 15 samples</td>
+            <td>8–35% QFF</td>
+          </tr>
+          <tr>
+            <td><span class="tier-name">REGION</span> <span class="tier-badge t-mid">good</span></td>
+            <td>Same region, same duration + quota</td>
+            <td>Any</td>
+            <td>40% QFF</td>
+          </tr>
+          <tr>
+            <td><span class="tier-name">GLOBAL</span> <span class="tier-badge t-mid">ok</span></td>
+            <td>All countries, same duration + quota</td>
+            <td>Any</td>
+            <td>55% QFF</td>
+          </tr>
+          <tr>
+            <td><span class="tier-name">NEAREST</span> <span class="tier-badge t-mid">ok</span></td>
+            <td>Closest duration (±5 days), same quota</td>
+            <td>Any</td>
+            <td>70% QFF</td>
+          </tr>
+          <tr>
+            <td><span class="tier-name">CURVE</span> <span class="tier-badge t-curve">fallback</span></td>
+            <td>Mathematical formula</td>
+            <td>Always</td>
+            <td>90% QFF</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Cards -->
+  <div class="cards">
+    <div class="card">
+      <div class="card-icon">⚖</div>
+      <h3>Quota Feasibility Factor</h3>
+      <p>Physics-informed clamp that prevents unrealistic scores. BIG DATA uses calibrated daily consumption reference. FUP and Unlimited use duration-decay curves derived from actual activity rates.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🌍</div>
+      <h3>Weighted modal cost</h3>
+      <p>Dynamic supplier cost per package — not a flat table. MCC codes from daily data resolve to countries, each with a CNY/GB rate. Cost is usage-weighted across all roaming destinations.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">📐</div>
+      <h3>Market-calibrated formula</h3>
+      <p>BIG DATA pricing reverse-engineered from competitor data. Log-linear model fit with 5.7% mean error: rate = 0.5848 + 0.065·ln(day) − 0.1016·ln(GB). Reduced overpricing from +53% to target 10–15%.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">〰</div>
+      <h3>Isotonic smoothing</h3>
+      <p>BIG DATA scores are monotonically non-decreasing by duration. FUP and Unlimited are monotonically decreasing — engagement drops over longer subscriptions. Enforced via scikit-learn IsotonicRegression.</p>
+    </div>
+  </div>
+
+  <!-- Formula block -->
+  <div style="margin-top: 3rem;">
+    <h3 style="font-size: 17px; font-weight: 500; margin-bottom: 1rem;">Pricing formula by product type</h3>
+    <pre><span class="cm"># BIG DATA — market-calibrated log-linear</span>
+<span class="ck">rate</span> = <span class="cv">0.5848</span> + <span class="cv">0.065</span> * np.log(day) - <span class="cv">0.1016</span> * np.log(gb)
+modal_adj = modal * gb * behaviour_score * rate
+
+<span class="cm"># FUP / Unlimited — behaviour score with duration decay</span>
+modal_adj = modal * behaviour_score * days * quota_gb
+
+<span class="cm"># Final price (IDR)</span>
+cost_idr = (modal_adj + device_cost) * cny_rate
+price = margin(cost_idr)  <span class="cm"># rounds to nearest 10,000 + 9,000</span></pre>
+  </div>
+</section>
+
+<!-- IMPACT -->
+<section class="container">
+  <div class="impact">
+    <p class="impact-label">Business impact</p>
+    <h2>From manual spreadsheets<br>to <em>fully automated</em> pricing</h2>
+    <p style="color: #9a9590; font-size: 15px; max-width: 500px; line-height: 1.75;">
+      The system replaced a manual process where each package was priced individually. It now generates a complete, market-competitive price list in a single pipeline run.
+    </p>
+    <div class="impact-stats">
+      <div>
+        <div class="impact-stat-val">10,800+</div>
+        <div class="impact-stat-label">SKUs priced automatically</div>
+      </div>
+      <div>
+        <div class="impact-stat-val">53% → 15%</div>
+        <div class="impact-stat-label">Avg overpricing vs. market</div>
+      </div>
+      <div>
+        <div class="impact-stat-val">5.7%</div>
+        <div class="impact-stat-label">Pricing model fit error</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STACK -->
+<section class="container section" id="stack">
+  <p class="section-label">Technical stack</p>
+  <h2>Built with</h2>
+
+  <div class="stack">
+    <div class="stack-row">
+      <div class="stack-key">Language</div>
+      <div class="stack-val">Python 3.10+</div>
+    </div>
+    <div class="stack-row">
+      <div class="stack-key">Data</div>
+      <div class="stack-val">Pandas · NumPy</div>
+    </div>
+    <div class="stack-row">
+      <div class="stack-key">Modelling</div>
+      <div class="stack-val">SciPy (curve_fit, lstsq) · scikit-learn (IsotonicRegression)</div>
+    </div>
+    <div class="stack-row">
+      <div class="stack-key">Integration</div>
+      <div class="stack-val">gspread · Google Sheets API v4 · Google Drive API</div>
+    </div>
+    <div class="stack-row">
+      <div class="stack-key">Config</div>
+      <div class="stack-val">JSON-based country, MCC, and rate mappings</div>
+    </div>
+    <div class="stack-row">
+      <div class="stack-key">Output</div>
+      <div class="stack-val">Google Sheets (live) · Excel (.xlsx)</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  eSIM Pricing Pipeline · Built with Python · Data-driven pricing automation
+</footer>
+
+</body>
+</html>

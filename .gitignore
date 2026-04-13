@@ -1,0 +1,52 @@
+# ========================
+# PYTHON
+# ========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# ========================
+# VIRTUAL ENV
+# ========================
+.env
+.venv
+env/
+venv/
+
+# ========================
+# CREDENTIALS & SECRETS ⚠️
+# ========================
+config/google_credentials.json
+config/google_credentials.json.json
+*.json.json
+data/mappings/country_rate.json
+data/mappings/raw_modal.xlsx
+
+# ========================
+# DATA RAW (jangan commit)
+# ========================
+data/raw/
+data/output/
+cek.py
+asuransi.py
+
+# ========================
+# LOGS
+# ========================
+logs/
+
+# ========================
+# OS
+# ========================
+.DS_Store
+Thumbs.db
+
+# ========================
+# VSCODE
+# ========================
+.vscode/

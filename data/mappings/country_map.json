@@ -1,0 +1,279 @@
+{
+  "_meta": {
+    "version": "2.0",
+    "description": "Single source of truth for country mapping, regions, and group labels",
+    "region_hierarchy": {
+      "ASIA": ["ASIA_EAST", "ASIA_SEA"],
+      "EUROPE": ["EUROPE"],
+      "MIDDLE_EAST": ["MIDDLE_EAST"],
+      "AMERICA": ["AMERICA"],
+      "OCEANIA": ["OCEANIA"]
+    },
+    "fields": {
+      "patterns": "List of package name substrings for matching (UPPERCASE)",
+      "group": "Display label used in reports and Excel sheets",
+      "region": "Granular region for BF fallback scoring",
+      "region_group": "Coarse region for report splitting (ASIA, EUROPE, etc)",
+      "regions": "Optional — list of granular regions this code contributes BF data to (multi-country products only)",
+      "force_include": "Always generate full SKU matrix even without sales data"
+    }
+  },
+
+  "CHMPLUS": {
+    "patterns": [
+      "CHINA HONGKONG MACAU + TRANSIT",
+      "CHINA HONGKONG MACAU",
+      "CHINA HONG KONG MACAU",
+      "CHINA, HONG KONG, MACAU",
+      "ESIM CHINA",
+      "ESIM CHINA HONG KONG MACAU",
+      "ESIM CHINA, HONG KONG, MACAU"
+    ],
+    "group": "China Hongkong Macau + Transit",
+    "region": "ASIA_EAST",
+    "region_group": "ASIA",
+    "force_include": true
+  },
+  "CHMMAX": {
+    "patterns": [
+      "CHINA HONGKONG MACAU + TRANSIT DATAMAX",
+      "CHINA + TRANSIT DATAMAX"
+    ],
+    "group": "China Hongkong Macau + Transit DataMax",
+    "region": "ASIA_EAST",
+    "region_group": "ASIA",
+    "force_include": true
+  },
+
+  "JPNPLUS": {
+    "patterns": [
+      "JAPAN + TRANSIT",
+      "JAPAN",
+      "ESIM JAPAN"
+    ],
+    "group": "Japan + Transit",
+    "region": "ASIA_EAST",
+    "region_group": "ASIA",
+    "force_include": true
+  },
+  "JPNMAX": {
+    "patterns": [
+      "JAPAN + TRANSIT DATAMAX"
+    ],
+    "group": "Japan + Transit DataMax",
+    "region": "ASIA_EAST",
+    "region_group": "ASIA",
+    "force_include": true
+  },
+
+  "KOR": {
+    "patterns": [
+      "KOREA"
+    ],
+    "group": "Korea",
+    "region": "ASIA_EAST",
+    "region_group": "ASIA",
+    "force_include": true
+  },
+  "TWN": {
+    "patterns": [
+      "TAIWAN",
+      "ESIM TAIWAN"
+    ],
+    "group": "Taiwan",
+    "region": "ASIA_EAST",
+    "region_group": "ASIA",
+    "force_include": true
+  },
+
+  "SGMY": {
+    "patterns": [
+      "SINGAPORE MALAYSIA THAILAND",
+      "SINGAPORE MALAYSIA",
+      "SINGAPORE",
+      "MALAYSIA"
+    ],
+    "group": "Singapore Malaysia Thailand",
+    "region": "ASIA_SEA",
+    "region_group": "ASIA",
+    "force_include": true
+  },
+  "SEA5": {
+    "patterns": [
+      "SINGAPORE MALAYSIA THAILAND VIETNAM"
+    ],
+    "group": "SEA4",
+    "region": "ASIA_SEA",
+    "region_group": "ASIA",
+    "force_include": true
+  },
+  "PHL": {
+    "patterns": [
+      "PHILIPPINES"
+    ],
+    "group": "Philippines",
+    "region": "ASIA_SEA",
+    "region_group": "ASIA",
+    "force_include": true
+  },
+  "VNM": {
+    "patterns": [
+      "VIETNAM"
+    ],
+    "group": "Vietnam",
+    "region": "ASIA_SEA",
+    "region_group": "ASIA",
+    "force_include": true
+  },
+  "IDN": {
+    "patterns": [
+      "ESIM INDONESIA",
+      "INDONESIA"
+    ],
+    "group": "Indonesia",
+    "region": "ASIA_SEA",
+    "region_group": "ASIA",
+    "force_include": true
+  },
+  "BRN": {
+    "patterns": [
+      "BRUNEI DARUSSALAM",
+      "BRUNEI"
+    ],
+    "group": "Brunei",
+    "region": "ASIA_SEA",
+    "region_group": "ASIA",
+    "force_include": true
+  },
+
+  "ASIA": {
+    "patterns": [
+      "ENDORSE ASIA 2GB/DAYS",
+      "JAPAN MALAYSIA INDONESIA",
+      "JEPANG SINGAPORE THAILAND VIETNAM MALAYSIA TAIWAN HONGKONG SOUTH KOREA",
+      "ESIM JEPANG, SINGAPORE, KOREA, HONGKONG, CHINA, THAILAND, MALAYSIA",
+      "GSIM SINGAPORE, MALAY, THAILAND, FILIPINA",
+      "GSIM! ASIA"
+    ],
+    "group": "Gsim! Asia",
+    "region": "ASIA_SEA",
+    "region_group": "ASIA",
+    "regions": ["ASIA_EAST", "ASIA_SEA"],
+    "force_include": true
+  },
+
+  "ME": {
+    "patterns": [
+      "UAE DUBAI, TURKEY, SAUDI ARABIA, MESIR, ISRAEL",
+      "ESIM UAE DUBAI, TURKEY, SAUDI ARABIA, MESIR, ISRAEL",
+      "GSIM! MIDDLE EAST"
+    ],
+    "group": "Uae Dubai, Turkey, Saudi Arabia, Mesir, Israel",
+    "region": "MIDDLE_EAST",
+    "region_group": "MIDDLE_EAST",
+    "force_include": true
+  },
+  "SAU": {
+    "patterns": [
+      "SAUDI ARABIA",
+      "ESIM SAUDI ARABIA"
+    ],
+    "group": "Saudi Arabia",
+    "region": "MIDDLE_EAST",
+    "region_group": "MIDDLE_EAST",
+    "force_include": true
+  },
+  "HAJ": {
+    "patterns": [
+      "ARAB HAJI"
+    ],
+    "group": "Arab Haji",
+    "region": "MIDDLE_EAST",
+    "region_group": "MIDDLE_EAST",
+    "force_include": true
+  },
+
+  "EU43": {
+    "patterns": [
+      "EUROPE 30 COUNTRIES",
+      "EUROPE30",
+      "ESIM EUROPE",
+      "ESIM UK",
+      "GSIM! EUROPE",
+      "GSIM! FRANCE ITALY POLAND CEKO AUTRIA HUNGARY",
+      "TURKEY",
+      "SPAIN & SAUDI ARABIA",
+      "EUROPE"
+    ],
+    "group": "Gsim! Europe",
+    "region": "EUROPE",
+    "region_group": "EUROPE",
+    "force_include": true
+  },
+  "EU70": {
+    "patterns": [
+      "GSIM! EUROPE 70"
+    ],
+    "group": "Gsim! Europe 70",
+    "region": "EUROPE",
+    "region_group": "EUROPE",
+    "force_include": true
+  },
+  "RUSPLUS": {
+    "patterns": [
+      "RUSSIA + TRANSIT",
+      "RUSSIA"
+    ],
+    "group": "Russia + Transit",
+    "region": "EUROPE",
+    "region_group": "EUROPE",
+    "force_include": true
+  },
+
+  "USA": {
+    "patterns": [
+      "(SC) USA",
+      "USA"
+    ],
+    "group": "USA",
+    "region": "AMERICA",
+    "region_group": "AMERICA",
+    "force_include": true
+  },
+  "USCA": {
+    "patterns": [
+      "USA CANADA"
+    ],
+    "group": "USA Canada",
+    "region": "AMERICA",
+    "region_group": "AMERICA",
+    "force_include": true
+  },
+  "AMR": {
+    "patterns": [
+      "GSIM! AMERIKA"
+    ],
+    "group": "Gsim! Amerika",
+    "region": "AMERICA",
+    "region_group": "AMERICA",
+    "force_include": true
+  },
+
+  "AUNZPLUS": {
+    "patterns": [
+      "AUSTRALIA NEW ZEALAND",
+      "ESIM AUSTRALIA NEW ZEALAND"
+    ],
+    "group": "Australia New Zealand",
+    "region": "OCEANIA",
+    "region_group": "OCEANIA",
+    "force_include": true
+  },
+  "THA": {
+    "patterns": ["THAILAND", "THAI", "ESIM THAILAND"],
+    "group": "Thailand",
+    "region": "ASIA_SEA",
+    "region_group": "ASIA",
+    "force_include": true
+  }
+}
