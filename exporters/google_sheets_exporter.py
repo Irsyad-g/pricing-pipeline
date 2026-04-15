@@ -6,6 +6,7 @@ import numpy as np
 import json
 import re
 import math
+from processors.normalize_cross_type import normalize_cross_type
 
 # =====================
 # CONFIG
@@ -75,17 +76,14 @@ def get_type(quota):
         return "FUP"  
 
 
-# =====================
-# FLAT PRICE
-# =====================
+# HELPER FUNCTION
 def flat_price(cost_idr):
     price = cost_idr + 25000
     return price - (price % 10000)+9000
 
+def round_9000(price):
+        return price - (price % 10000) + 9000
 
-# =====================
-# MARGIN FUNCTION
-# =====================
 def margin_sim(price):
     if price * 0.35 > 35000:
         result = price * 1.35
@@ -152,8 +150,6 @@ def parse_quota_value(quota):
 
     return float(quota_key)  # fallback
 
-def get_day_factor(day):
-    return 1 + 0.25 * math.log(max(day, 1)) / math.log(30)
 
 
 # =====================
@@ -171,7 +167,7 @@ FUP_TIER_ORDER = [
 ]
 
 # Base gap per 0.5GB increment (IDR) — scales with duration
-FUP_BASE_GAP_PER_HALF_GB = 15000
+FUP_BASE_GAP_PER_HALF_GB = 5000
 
 def get_fup_tier_index(quota_key):
     """Return index in FUP_TIER_ORDER, or -1 if not found."""
@@ -215,8 +211,6 @@ def apply_premium_pricing(df):
     3. Safety: harga MAX selalu >= harga BASE (never cheaper)
     """
     
-    def round_9000(price):
-        return price - (price % 10000) + 9000
     
     # Identify premium countries
     df["_BASE_COUNTRY"] = df["NEGARA"].apply(lambda n: get_base_country(n)[0])
@@ -330,7 +324,6 @@ def calculate_cost_opportunity(df):
     df["HARGA_BF_SIM"]  = df["HARGA_SIM"].copy()
     df["HARGA_BF_ESIM"] = df["HARGA_ESIM"].copy()
     df["HARGA_BF_FLAT"] = df["HARGA_FLAT"].copy()
-    
     # ---------------------------------------------------
     # STEP 2: Margin Floor — ensure 25% margin from cost
     # ---------------------------------------------------
@@ -611,13 +604,11 @@ def compute_modal_adj(row):
 
     elif tipe == "FUP":
         effective_days = hari * bs
-        day_factor     = get_day_factor(hari)
-        return modal * effective_days * quota_val * day_factor
+        return modal * effective_days * quota_val 
 
     else:  # PURE UNLIMITED
         effective_days = hari * bs
-        day_factor     = get_day_factor(hari)
-        return modal * effective_days * quota_val * day_factor
+        return modal * effective_days * quota_val
 
 
 def export_pricing(bf_full, country_df):
@@ -707,6 +698,10 @@ def export_pricing(bf_full, country_df):
     df["COST_SIM_IDR"] = df["TOTAL_MODAL_SIM"] * RATE
     df["COST_ESIM_IDR"] = df["TOTAL_MODAL_ESIM"] * RATE
 
+    print(df[df["TYPE"].isin(["FUP","PURE UNLIMITED"])][
+        ["SKU","MODAL","QUOTA_VAL","Behaviour_Score","HARI","MODAL_ADJ","MODAL_ADJ_IDR","COST_SIM_IDR"]
+    ].sort_values("MODAL_ADJ_IDR", ascending=False).head(15).to_string())
+
     # =====================
     # PRICE (BEHAVIOUR-BASED — harga murni)
     # =====================
@@ -714,11 +709,6 @@ def export_pricing(bf_full, country_df):
     df["HARGA_ESIM"] = df["COST_ESIM_IDR"].apply(margin_esim)
     df["HARGA_FLAT"] = df["MODAL_ADJ_IDR"].apply(flat_price)
 
-    print(df[df["SKU"] == "GK-CHMPLUS-1-1"][
-        ["SKU", "MODAL", "MODAL_ADJ", "MODAL_ADJ_IDR",
-        "COST_SIM_IDR", "COST_ESIM_IDR",
-        "HARGA_FLAT", "HARGA_SIM", "HARGA_ESIM"]
-    ].to_string())
 
     # =====================
     # SORT (sebelum opportunity — supaya tier gap dihitung urut)
@@ -741,22 +731,24 @@ def export_pricing(bf_full, country_df):
     # =====================
     df = smooth_prices(df)
     df = enforce_bigdata_gap(df)
-
     # =====================
     # 🆕 COST OPPORTUNITY — after smooth & bigdata gap
     # =====================
     df = calculate_cost_opportunity(df)
-    
-    # =====================
-    # 🆕 PREMIUM (MAX) PRICING — after cost opportunity
-    # Harga MAX = harga BASE (PLUS) × 1.35
-    # Must run AFTER cost opportunity so BASE prices are final
-    # =====================
+    df = normalize_cross_type(df)
     df = apply_premium_pricing(df)
-    
-    # Re-smooth after opportunity + premium adjustments
     df = smooth_prices(df)
-
+    # Final safety: enforce minimum margin
+    for col_price, col_cost in [
+        ("HARGA_SIM", "COST_SIM_IDR"),
+        ("HARGA_ESIM", "COST_ESIM_IDR"),
+        ("HARGA_FLAT", "MODAL_ADJ_IDR"),
+    ]:
+        below = df[col_price] < df[col_cost]
+        df.loc[below, col_price] = df.loc[below, col_cost].apply(
+            lambda c: round_9000(c / (1 - TARGET_MARGIN))
+        )
+   
     # =====================
     # DEBUG: Print opportunity impact
     # =====================
