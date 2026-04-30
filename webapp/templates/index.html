@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ICCID Checker — Roaming Usage</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:          #f0f2f5;
+    --surface:     #ffffff;
+    --surface2:    #f8f9fb;
+    --border:      #e4e7ee;
+    --border-soft: #eef0f5;
+    --text:        #111827;
+    --text2:       #374151;
+    --muted:       #6b7280;
+    --muted2:      #9ca3af;
+    --accent:      #1d4ed8;
+    --accent-soft: #eff4ff;
+    --accent-dark: #1e3a8a;
+    --green:       #15803d;
+    --yellow:      #b45309;
+    --red:         #b91c1c;
+    --green-bg:    #f0fdf4;
+    --green-bd:    #bbf7d0;
+    --yellow-bg:   #fffbeb;
+    --yellow-bd:   #fde68a;
+    --red-bg:      #fef2f2;
+    --red-bd:      #fecaca;
+    --radius:      10px;
+    --shadow:      0 1px 4px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.04);
+    --shadow-sm:   0 1px 3px rgba(0,0,0,.07);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ═══════════════════════════════════════════
+     HEADER
+  ═══════════════════════════════════════════ */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 6px rgba(0,0,0,.05);
+  }
+
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+  }
+  .header-icon {
+    width: 32px; height: 32px;
+    background: var(--accent-soft);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .header-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -.2px;
+  }
+  .header-subtitle {
+    font-size: 12px;
+    color: var(--muted);
+    margin-left: 4px;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .health-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .health-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--muted2);
+    flex-shrink: 0;
+  }
+  .health-dot.ok  { background: var(--green); box-shadow: 0 0 0 2px #dcfce7; }
+  .health-dot.err { background: var(--red);   box-shadow: 0 0 0 2px #fee2e2; }
+
+  .header-logo {
+    height: 32px;
+    width: auto;
+    max-width: 120px;
+    object-fit: contain;
+    display: block;
+  }
+  .header-logo-placeholder {
+    /* shows if logo.png is missing — hidden once image loads */
+    display: none;
+  }
+
+  /* ═══════════════════════════════════════════
+     LAYOUT
+  ═══════════════════════════════════════════ */
+  .main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 24px 60px;
+  }
+
+  /* Section label */
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ═══════════════════════════════════════════
+     INPUT SECTION
+  ═══════════════════════════════════════════ */
+  .input-section { margin-bottom: 36px; }
+
+  .input-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+  }
+
+  .input-panel label {
+    display: block;
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 6px;
+    color: var(--text2);
+  }
+  .input-desc {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 14px;
+    line-height: 1.6;
+  }
+  .input-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  textarea {
+    flex: 1;
+    font-family: 'Menlo', 'Courier New', monospace;
+    font-size: 13px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    resize: vertical;
+    min-height: 96px;
+    color: var(--text);
+    background: var(--surface2);
+    outline: none;
+    transition: border-color .15s, background .15s, box-shadow .15s;
+    line-height: 1.6;
+  }
+  textarea:focus {
+    border-color: var(--accent);
+    background: var(--surface);
+    box-shadow: 0 0 0 3px rgba(29,78,216,.08);
+  }
+  textarea::placeholder { color: var(--muted2); }
+
+  .btn-query {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0 28px;
+    height: 44px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s, transform .1s, box-shadow .15s;
+    box-shadow: 0 2px 8px rgba(29,78,216,.25);
+    letter-spacing: -.1px;
+    align-self: flex-start;
+  }
+  .btn-query:hover {
+    background: #1a44c2;
+    box-shadow: 0 4px 12px rgba(29,78,216,.35);
+  }
+  .btn-query:active { transform: scale(.98); }
+  .btn-query:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
+
+  .input-hint {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--muted2);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .input-hint::before {
+    content: '⌘';
+    font-size: 11px;
+    background: var(--border-soft);
+    padding: 1px 5px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  /* ═══════════════════════════════════════════
+     FEEDBACK STATES
+  ═══════════════════════════════════════════ */
+  .spinner {
+    display: none;
+    padding: 48px 0;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .spinner.show { display: block; }
+  .spinner-ring {
+    width: 28px; height: 28px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+    margin: 0 auto 12px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-box {
+    background: var(--red-bg);
+    border: 1px solid var(--red-bd);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    color: var(--red);
+    font-size: 13px;
+    margin-bottom: 20px;
+    display: none;
+    align-items: center;
+    gap: 8px;
+  }
+  .error-box.show { display: flex; }
+  .error-box::before { content: '⚠'; font-size: 15px; flex-shrink: 0; }
+
+  /* ═══════════════════════════════════════════
+     RESULTS SECTION
+  ═══════════════════════════════════════════ */
+  .results-section { display: none; }
+  .results-section.show { display: block; }
+
+  .results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .results-count {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .results-count strong { color: var(--text); }
+  .btn-clear {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all .15s;
+  }
+  .btn-clear:hover { background: var(--surface2); color: var(--text); border-color: #d1d5db; }
+
+  /* Cards grid */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+    gap: 18px;
+  }
+
+  /* ═══════════════════════════════════════════
+     ICCID CARD
+  ═══════════════════════════════════════════ */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: box-shadow .2s, transform .2s;
+  }
+  .card:hover { box-shadow: 0 4px 20px rgba(0,0,0,.09); }
+  .card.not-found { opacity: .65; border-style: dashed; }
+
+  /* Card header */
+  .card-header {
+    padding: 14px 20px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card-header-icon {
+    width: 28px; height: 28px;
+    background: var(--accent-soft);
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .iccid-label {
+    font-family: 'Menlo', 'Courier New', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .4px;
+    flex: 1;
+    color: var(--text);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .badge.active   { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-bd); }
+  .badge.inactive { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-bd); }
+  .badge.unknown  { background: #f3f4f6; color: var(--muted); border: 1px solid #e5e7eb; }
+
+  /* Card body */
+  .card-body { padding: 20px; }
+
+  /* ─── Usage hero ─── */
+  .usage-hero {
+    text-align: center;
+    margin-bottom: 18px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .usage-hero-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    margin-bottom: 6px;
+  }
+  .usage-hero-value {
+    font-size: 44px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -1px;
+    margin-bottom: 4px;
+  }
+  .usage-hero-unit {
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--muted);
+    letter-spacing: 0;
+  }
+  .usage-hero-sub { font-size: 12px; color: var(--muted2); margin-top: 4px; }
+
+  .usage-hero-value.low    { color: var(--green); }
+  .usage-hero-value.medium { color: var(--yellow); }
+  .usage-hero-value.high   { color: var(--red); }
+
+  /* ─── Usage bar ─── */
+  .usage-bar-wrap {
+    background: var(--border-soft);
+    border-radius: 6px;
+    height: 6px;
+    overflow: hidden;
+    margin: 10px 0 6px;
+  }
+  .usage-bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width .5s ease;
+  }
+  .usage-bar-fill.low    { background: var(--green); }
+  .usage-bar-fill.medium { background: var(--yellow); }
+  .usage-bar-fill.high   { background: var(--red); }
+
+  /* ─── Stats row ─── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 18px;
+  }
+  .stat-item {
+    background: var(--surface);
+    padding: 12px 10px;
+    text-align: center;
+    transition: background .15s;
+  }
+  .stat-item:hover { background: var(--surface2); }
+  .stat-label {
+    font-size: 10px;
+    color: var(--muted2);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 4px;
+  }
+  .stat-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  /* ─── Cost bar ─── */
+  .cost-total {
+    background: linear-gradient(135deg, var(--accent-dark) 0%, var(--accent) 100%);
+    color: #fff;
+    border-radius: 8px;
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    box-shadow: 0 2px 8px rgba(29,78,216,.2);
+  }
+  .cost-label {
+    font-size: 10px;
+    opacity: .75;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    margin-bottom: 4px;
+  }
+  .cost-idr { font-size: 22px; font-weight: 800; letter-spacing: -.5px; }
+  .cost-cny { font-size: 12px; opacity: .65; margin-top: 3px; }
+  .cost-icon { font-size: 32px; opacity: .2; line-height: 1; }
+
+  /* ─── Country breakdown ─── */
+  .subsection-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .subsection-title .count-pill {
+    background: var(--border-soft);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1px 7px;
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .country-list { display: flex; flex-direction: column; gap: 9px; margin-bottom: 4px; }
+  .country-item {}
+  .country-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .country-name {
+    font-size: 13px;
+    font-weight: 600;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text);
+  }
+  .country-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .country-usage-mb {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'Menlo', 'Courier New', monospace;
+  }
+  .country-cost {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text2);
+    font-family: 'Menlo', 'Courier New', monospace;
+  }
+  .country-pct {
+    font-size: 10px;
+    color: var(--muted2);
+    min-width: 28px;
+    text-align: right;
+  }
+  .progress-bar-wrap {
+    background: var(--border-soft);
+    border-radius: 4px;
+    height: 4px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width .5s ease;
+  }
+  .progress-bar-fill.low    { background: var(--green); }
+  .progress-bar-fill.medium { background: var(--yellow); }
+  .progress-bar-fill.high   { background: var(--red); }
+
+  .more-countries {
+    font-size: 11px;
+    color: var(--muted2);
+    margin-top: 6px;
+    padding: 5px 8px;
+    background: var(--surface2);
+    border-radius: 5px;
+    border: 1px solid var(--border-soft);
+    text-align: center;
+  }
+
+  /* ─── Subscription accordion ─── */
+  .subs-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+    padding: 14px 0 0;
+    margin-top: 14px;
+    border-top: 1px solid var(--border-soft);
+    transition: opacity .15s;
+  }
+  .subs-toggle:hover { opacity: .75; }
+  .subs-toggle-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+  }
+  .subs-chevron {
+    font-size: 11px;
+    color: var(--muted2);
+    transition: transform .2s;
+  }
+  .subs-chevron.open { transform: rotate(180deg); }
+
+  .subs-list { display: none; margin-top: 10px; }
+  .subs-list.open { display: flex; flex-direction: column; gap: 6px; }
+
+  .sub-row {
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 12px;
+    background: var(--surface2);
+    transition: background .15s;
+  }
+  .sub-row:hover { background: #f3f5f9; }
+  .sub-row-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+    gap: 8px;
+  }
+  .sub-pkg { font-weight: 700; color: var(--text); font-size: 13px; }
+  .sub-dates {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'Menlo', 'Courier New', monospace;
+    white-space: nowrap;
+  }
+  .sub-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 6px;
+  }
+  .sub-stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+  }
+  .sub-stat-label {
+    font-size: 10px;
+    color: var(--muted2);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    margin-bottom: 2px;
+  }
+  .sub-stat-value { font-weight: 700; color: var(--text2); font-size: 12px; }
+
+  /* ─── Not found ─── */
+  .not-found-msg {
+    text-align: center;
+    padding: 32px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .not-found-msg .nf-icon { font-size: 28px; margin-bottom: 8px; opacity: .5; }
+
+  /* ═══════════════════════════════════════════
+     RESPONSIVE
+  ═══════════════════════════════════════════ */
+  @media (max-width: 640px) {
+    .header { padding: 0 16px; }
+    .header-subtitle { display: none; }
+    .main { padding: 20px 12px 48px; }
+    .cards-grid { grid-template-columns: 1fr; }
+    .input-row { flex-direction: column; }
+    .btn-query { width: 100%; justify-content: center; }
+    .sub-stats-grid { grid-template-columns: 1fr 1fr; }
+    .header-logo { max-width: 90px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ─── HEADER ──────────────────────────────────────────────── -->
+<header class="header">
+  <div class="header-brand">
+    <div class="header-icon">📡</div>
+    <div>
+      <div class="header-title">ICCID Roaming Checker</div>
+    </div>
+    <span class="header-subtitle">Usage &amp; Cost Lookup</span>
+  </div>
+
+  <div class="header-right">
+    <div class="health-pill">
+      <span class="health-dot" id="health-dot"></span>
+      <span id="health-text">Checking…</span>
+    </div>
+    <!-- Company logo — place file at webapp/static/logo.png -->
+    <img
+      src="/static/logo.png"
+      alt="GK Komunika"
+      class="header-logo"
+      onerror="this.style.display='none';"
+    />
+  </div>
+</header>
+
+<!-- ─── MAIN ─────────────────────────────────────────────────── -->
+<main class="main">
+
+  <!-- INPUT SECTION -->
+  <section class="input-section">
+    <div class="section-label">Input Data</div>
+    <div class="input-panel">
+      <label for="iccid-input">ICCID Numbers</label>
+      <p class="input-desc">
+        Enter one or more ICCID numbers — separated by commas, newlines, or semicolons.
+        Duplicates are removed automatically. Maximum 50 per query.
+      </p>
+      <div class="input-row">
+        <textarea
+          id="iccid-input"
+          placeholder="Paste ICCIDs here&#10;&#10;894600000000001&#10;894600000000002, 894600000000003"
+          rows="4"
+        ></textarea>
+        <button class="btn-query" id="btn-query" onclick="doQuery()">Check</button>
+      </div>
+      <p class="input-hint">Ctrl + Enter to submit</p>
+    </div>
+  </section>
+
+  <!-- FEEDBACK -->
+  <div class="error-box" id="error-box"></div>
+  <div class="spinner" id="spinner">
+    <div class="spinner-ring"></div>
+    Loading usage data…
+  </div>
+
+  <!-- RESULTS SECTION -->
+  <section class="results-section" id="results-section">
+    <div class="section-label">Results</div>
+    <div class="results-header">
+      <span class="results-count" id="results-count"></span>
+      <button class="btn-clear" onclick="clearResults()">Clear</button>
+    </div>
+    <div class="cards-grid" id="cards-grid"></div>
+  </section>
+
+</main>
+
+<script>
+const API = '/api/query';
+
+// ── Health check ────────────────────────────────────────────────────────
+(async () => {
+  try {
+    const r = await fetch('/api/health');
+    const d = await r.json();
+    const dot  = document.getElementById('health-dot');
+    const text = document.getElementById('health-text');
+    if (d.status === 'ok') {
+      dot.className = 'health-dot ok';
+      text.textContent = 'DB Connected';
+    } else {
+      dot.className = 'health-dot err';
+      text.textContent = 'DB Error: ' + d.db;
+    }
+  } catch(e) {
+    document.getElementById('health-text').textContent = 'Cannot reach server';
+  }
+})();
+
+// ── Enter key submit ────────────────────────────────────────────────────
+document.getElementById('iccid-input').addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key === 'Enter') doQuery();
+});
+
+// ── Helpers ─────────────────────────────────────────────────────────────
+function fmtNum(n, dec=2) {
+  if (n == null || isNaN(n)) return '—';
+  return Number(n).toLocaleString('id-ID', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+function fmtGB(mb) {
+  return fmtNum(mb / 1024, 2);
+}
+function usageColor(pct) {
+  if (pct >= 80) return 'high';
+  if (pct >= 50) return 'medium';
+  return 'low';
+}
+
+// ── Query ────────────────────────────────────────────────────────────────
+async function doQuery() {
+  const raw = document.getElementById('iccid-input').value.trim();
+  if (!raw) return;
+
+  const btn = document.getElementById('btn-query');
+  btn.disabled = true;
+
+  document.getElementById('error-box').className = 'error-box';
+  document.getElementById('spinner').className = 'spinner show';
+  document.getElementById('results-section').className = 'results-section';
+  document.getElementById('cards-grid').innerHTML = '';
+
+  try {
+    const res  = await fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ iccids: raw })
+    });
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      showError(data.error || 'Unknown error');
+      return;
+    }
+
+    renderResults(data.results);
+  } catch(e) {
+    showError('Network error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    document.getElementById('spinner').className = 'spinner';
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-box');
+  el.textContent = msg;
+  el.className = 'error-box show';
+}
+
+function clearResults() {
+  document.getElementById('cards-grid').innerHTML = '';
+  document.getElementById('results-section').className = 'results-section';
+  document.getElementById('iccid-input').value = '';
+}
+
+// ── Render ───────────────────────────────────────────────────────────────
+function renderResults(results) {
+  const grid = document.getElementById('cards-grid');
+  grid.innerHTML = '';
+
+  const found    = results.filter(r => r.found).length;
+  const notFound = results.length - found;
+
+  document.getElementById('results-section').className = 'results-section show';
+  document.getElementById('results-count').innerHTML =
+    `<strong>${results.length}</strong> ICCID${results.length !== 1 ? 's' : ''} checked` +
+    (found    ? ` · <strong>${found}</strong> found`         : '') +
+    (notFound ? ` · <strong>${notFound}</strong> not found`  : '');
+
+  results.forEach(r => {
+    grid.appendChild(r.found ? buildCard(r) : buildNotFoundCard(r));
+  });
+}
+
+function buildNotFoundCard(r) {
+  const card = document.createElement('div');
+  card.className = 'card not-found';
+  card.innerHTML = `
+    <div class="card-header">
+      <div class="card-header-icon">🔍</div>
+      <span class="iccid-label">${r.iccid}</span>
+      <span class="badge unknown">Not Found</span>
+    </div>
+    <div class="not-found-msg">
+      <div class="nf-icon">📭</div>
+      No usage data found for this ICCID.
+    </div>`;
+  return card;
+}
+
+function buildCard(r) {
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  const statusClass = r.is_active ? 'active' : 'inactive';
+  const statusLabel = r.is_active ? 'Active' : r.status || 'Inactive';
+
+  const totalGB     = r.total_usage_gb;
+  const totalMB     = r.total_usage_mb;
+  const totalQotaGB = r.total_quota_gb;
+  const usagePct    = r.total_quota_mb > 0 ? (r.total_usage_mb / r.total_quota_mb * 100) : 50;
+  const heroColor   = usageColor(usagePct);
+
+  const costDisplay = r.total_cost_idr;
+  const costCNY     = r.total_cost_cny;
+
+  card.innerHTML = `
+    <div class="card-header">
+      <div class="card-header-icon">📶</div>
+      <span class="iccid-label">${r.iccid}</span>
+      <span class="badge ${statusClass}">${statusLabel}</span>
+    </div>
+    <div class="card-body">
+
+      <div class="usage-hero">
+        <div class="usage-hero-label">Total Usage / Quota</div>
+        <div class="usage-hero-value ${heroColor}">
+          ${fmtNum(totalGB, 2)}<span class="usage-hero-unit"> / ${fmtNum(totalQotaGB, 2)} GB</span>
+        </div>
+        <div class="usage-bar-wrap">
+          <div class="usage-bar-fill ${heroColor}" style="width: ${Math.min(usagePct, 100).toFixed(1)}%"></div>
+        </div>
+        <div class="usage-hero-sub">${fmtNum(totalMB, 1)} MB used &nbsp;·&nbsp; ${fmtNum(usagePct, 1)}% &nbsp;·&nbsp; ${r.subscription_count} subscription${r.subscription_count !== 1 ? 's' : ''}</div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-item">
+          <div class="stat-label">Quota</div>
+          <div class="stat-value">${fmtNum(r.total_quota_mb / 1024, 1)} GB</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Usage %</div>
+          <div class="stat-value" style="color: var(--${heroColor === 'low' ? 'green' : heroColor === 'medium' ? 'yellow' : 'red'})">${fmtNum(usagePct, 1)}%</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Countries</div>
+          <div class="stat-value">${r.country_breakdown.length}</div>
+        </div>
+      </div>
+
+      <div class="cost-total">
+        <div>
+          <div class="cost-label">Total Cost</div>
+          <div class="cost-idr">Rp ${fmtNum(costDisplay, 0)}</div>
+          <div class="cost-cny">¥ ${fmtNum(costCNY, 2)} CNY</div>
+        </div>
+        <div class="cost-icon">¥</div>
+      </div>
+
+      ${buildCountryBreakdown(r.country_breakdown)}
+      ${buildSubAccordion(r.subscriptions, r.iccid)}
+
+    </div>`;
+
+  return card;
+}
+
+function buildCountryBreakdown(countries) {
+  if (!countries || !countries.length) return '<p style="color: var(--muted2); font-size:12px; margin-bottom:12px;">No country data available.</p>';
+
+  const maxMB = Math.max(...countries.map(c => c.usage_mb));
+
+  const items = countries.slice(0, 15).map(c => {
+    const barPct     = maxMB > 0 ? (c.usage_mb / maxMB * 100) : 0;
+    const pctOfTotal = c.pct_of_total;
+    const clr        = usageColor(pctOfTotal);
+
+    return `
+      <div class="country-item">
+        <div class="country-row">
+          <span class="country-name" title="${c.area_raw}">${c.country}</span>
+          <div class="country-meta">
+            <span class="country-pct">${c.pct_of_total}%</span>
+            <span class="country-usage-mb">${fmtNum(c.usage_mb, 1)} MB</span>
+            <span class="country-cost">Rp ${fmtNum(c.cost_idr, 0)}</span>
+          </div>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill ${clr}" style="width: ${barPct.toFixed(1)}%"></div>
+        </div>
+      </div>`;
+  }).join('');
+
+  const more = countries.length > 15
+    ? `<div class="more-countries">+${countries.length - 15} more countries</div>`
+    : '';
+
+  return `
+    <div class="subsection-title">
+      Country Breakdown
+      <span class="count-pill">${countries.length}</span>
+    </div>
+    <div class="country-list">${items}</div>
+    ${more}`;
+}
+
+function buildSubAccordion(subs, iccid) {
+  if (!subs || !subs.length) return '';
+
+  const uid = 'subs_' + iccid.replace(/\D/g, '');
+
+  const rows = subs.map(s => `
+    <div class="sub-row">
+      <div class="sub-row-header">
+        <span class="sub-pkg">${s.package || '—'}</span>
+        <span class="sub-dates">${s.start_date || '?'} → ${s.end_date || '?'}</span>
+      </div>
+      <div class="sub-stats-grid">
+        <div class="sub-stat">
+          <div class="sub-stat-label">Usage</div>
+          <div class="sub-stat-value">${fmtNum(s.total_usage_gb, 2)} GB</div>
+        </div>
+        <div class="sub-stat">
+          <div class="sub-stat-label">Quota</div>
+          <div class="sub-stat-value">${fmtNum(s.total_quota_gb, 2)} GB</div>
+        </div>
+        <div class="sub-stat">
+          <div class="sub-stat-label">Cost</div>
+          <div class="sub-stat-value">Rp ${fmtNum(s.real_cost_idr, 0)}</div>
+        </div>
+      </div>
+    </div>`).join('');
+
+  return `
+    <div class="subs-toggle" onclick="toggleSubs('${uid}')">
+      <span class="subs-toggle-label">Subscription History (${subs.length})</span>
+      <span class="subs-chevron" id="${uid}_chevron">▼</span>
+    </div>
+    <div class="subs-list" id="${uid}">${rows}</div>`;
+}
+
+function toggleSubs(uid) {
+  const list    = document.getElementById(uid);
+  const chevron = document.getElementById(uid + '_chevron');
+  const open    = list.classList.toggle('open');
+  chevron.classList.toggle('open', open);
+}
+</script>
+
+</body>
+</html>

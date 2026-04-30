@@ -3,6 +3,7 @@ import re
 import numpy as np
 
 from processors.behaviour_factor import resolve_group
+from rules.quota_rules import extract_quota
 
 
 def _resolve_type(package):
@@ -39,6 +40,10 @@ def process_subscription(sub, daily):
         sub_expired["END"]
     )
     sub_expired = sub_expired.drop(columns=["NEXT_START"])
+
+    sub_expired["TOTAL_QUOTA_MB"] = sub_expired.apply(
+        lambda r: extract_quota(r["PACKAGE"], r["DAYS"]), axis=1
+    )
 
     # merge daily ke sub expired
     sub_expired["ICCID"] = sub_expired["ICCID"].astype(str)

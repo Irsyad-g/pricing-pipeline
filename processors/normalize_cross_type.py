@@ -1,5 +1,5 @@
 """
-Cross-Type Normalization + Stacking Layer (v3)
+Cross-Type Normalization + Stacking Layer
 ===============================================
 Memastikan:
 1. STACKING: setiap kenaikan kuota WAJIB ada kenaikan harga (min 10rb)

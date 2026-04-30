@@ -1,6 +1,7 @@
 import pandas as pd
 from sqlalchemy import text
 from config.database import get_engine
+from processors.cost_calculator import RATE as CNY_RATE
 
 def _upsert_final(df, engine):
     if df.empty:
@@ -70,6 +71,18 @@ def _upsert_final(df, engine):
     if new_rows.empty and update_rows.empty:
         print("  processed.final_output — semua data sudah up to date")
 
+    # Recalculate real_cost_idr for all rows where rate changed
+    with engine.begin() as conn:
+        result = conn.execute(text("""
+            UPDATE processed.final_output
+            SET real_cost_idr = ROUND(CAST(real_cost_cny * :rate AS NUMERIC), 2)
+            WHERE real_cost_cny > 0
+              AND ABS(COALESCE(real_cost_idr, 0) - ROUND(CAST(real_cost_cny * :rate AS NUMERIC), 2)) > 0.01
+        """), {"rate": CNY_RATE})
+    updated = result.rowcount if hasattr(result, "rowcount") else 0
+    if updated:
+        print(f"  processed.final_output — recalculate real_cost_idr ({updated} baris, rate={CNY_RATE})")
+
 
 def _insert(df, table, schema, engine, unique_cols=None):
     if df.empty:
@@ -105,7 +118,7 @@ def _insert(df, table, schema, engine, unique_cols=None):
     print(f"  {schema}.{table} — insert {len(df)} baris")
 
 
-def export_to_db(daily, sub, final, bf_full, pricing_df, daily_files=None, sub_files=None):
+def export_to_db(daily, sub, final, bf_full, pricing_df, country_df=None, daily_files=None, sub_files=None):
     engine = get_engine()
 
     daily_db = daily[["ICCID", "AREA", "DATE", "DATE_ONLY", "USAGE_MB"]].copy()
@@ -162,5 +175,22 @@ def export_to_db(daily, sub, final, bf_full, pricing_df, daily_files=None, sub_f
     pricing_db.to_sql("pricing_output", engine, schema="pricing",
                       if_exists="replace", index=False)
     print(f"  pricing.pricing_output — replace {len(pricing_db)} baris")
+
+    if country_df is not None and not country_df.empty:
+        cu_db = (
+            country_df
+            .groupby(["ICCID", "Country"], as_index=False)["Country Usage (MB)"]
+            .sum()
+            .rename(columns={
+                "ICCID":              "iccid",
+                "Country":            "country",
+                "Country Usage (MB)": "country_usage_mb",
+            })
+        )
+        cu_db["iccid"] = cu_db["iccid"].astype(str).str.strip()
+        cu_db.to_sql("country_usage", engine, schema="processed", if_exists="replace", index=False)
+        print(f"  processed.country_usage — replace {len(cu_db)} baris")
+    else:
+        print("  processed.country_usage — country_df kosong, skip")
 
     print("\n  DB EXPORT DONE")

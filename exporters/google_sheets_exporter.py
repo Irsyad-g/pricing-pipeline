@@ -222,7 +222,7 @@ def apply_premium_pricing(df):
         df = df.drop(columns=["_BASE_COUNTRY", "_IS_PREMIUM"])
         return df
     
-    print(f"\n🏷️ PREMIUM COUNTRIES DETECTED: {list(premium_countries)}")
+    print(f"\nPREMIUM COUNTRIES DETECTED: {list(premium_countries)}")
     
     # Build lookup: base country prices per (HARI, KUOTA, TYPE)
     base_countries = df[df["_IS_PREMIUM"]]["_BASE_COUNTRY"].unique()
@@ -529,9 +529,10 @@ def smooth_prices(df):
     for (negara, kuota, tipe), group in df.groupby(["NEGARA", "KUOTA", "TYPE"]):
         group = group.sort_values("HARI").copy()
         cap   = SMOOTH_CAP.get(tipe)
+        hari_vals = group["HARI"].values.astype(float)
 
         for col in ["HARGA_SIM", "HARGA_ESIM", "HARGA_FLAT"]:
-            prices = group[col].values.copy()
+            prices = group[col].values.copy().astype(float)
 
             if tipe == "BIG DATA":
                 for i in range(1, len(prices)):
@@ -539,6 +540,22 @@ def smooth_prices(df):
                         prices[i] = prices[i - 1]
 
             else:
+                # Pass 1: fix inversions (day d2 cheaper than day d1 where d2 > d1)
+                prices = np.maximum.accumulate(prices)
+
+                # Pass 2: enforce minimum growth per day to break plateaus.
+                # Without this, isotonic pooling in BF smoothing causes e.g.
+                # day-17 == day-24 price after rounding.
+                # Rate 1.5%/day → 7-day gap yields ~11% minimum increase,
+                # which always crosses one 10k rounding bucket for prices > 65k.
+                MIN_GROWTH_RATE = 0.015
+                for i in range(1, len(prices)):
+                    day_gap = hari_vals[i] - hari_vals[i - 1]
+                    min_price = prices[i - 1] * (1 + MIN_GROWTH_RATE * day_gap)
+                    if prices[i] < min_price:
+                        prices[i] = min_price
+
+                # Pass 3: cap too-fast upward jumps (existing behaviour)
                 for i in range(1, len(prices)):
                     max_allowed = prices[i - 1] * (1 + cap)
                     if prices[i] > max_allowed:

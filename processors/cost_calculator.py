@@ -7,7 +7,7 @@ from pathlib import Path
 MCC_MAP_PATH      = Path("data/mappings/mcc_map.json")
 COUNTRY_RATE_PATH = Path("data/mappings/country_rate.json")
 SKU_FALLBACK_PATH = Path("data/mappings/sku_fallback.json")
-RATE              = 2450
+RATE              = 2650
 
 with open(MCC_MAP_PATH)      as f: MCC_MAP      = json.load(f)
 with open(COUNTRY_RATE_PATH) as f: COUNTRY_RATE = json.load(f)

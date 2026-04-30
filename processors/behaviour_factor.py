@@ -216,7 +216,8 @@ def generate_full_sku_matrix(final_df):
     ]
 
     SPECIAL_DAY_RULES = {
-        "HAJ": [7, 15, 30, 40, 60]
+        "HAJ": [7, 15, 30, 40, 60],
+        "SAU": list(range(1,31)) + [40,60]
     }
     SPECIAL_QUOTA_RULES = {
         "JPNMAX": ["10"],
@@ -234,9 +235,6 @@ def generate_full_sku_matrix(final_df):
     }
 
     countries = list(countries_from_data | forced_countries)
-    print(f"Countries from data: {len(countries_from_data)}")
-    print(f"Countries forced: {len(forced_countries)} → {forced_countries}")
-    print(f"Total: {len(countries)}")
 
     for country in countries:
         if country in SPECIAL_DAY_RULES:
@@ -544,8 +542,6 @@ def build_qff_calibration(df):
         .reset_index()
     )
 
-    print("\n📊 QFF CALIBRATION FROM DATA:")
-    print(calibration.to_string(index=False))
     return calibration
 
 

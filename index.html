@@ -3,27 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>eSIM Pricing Pipeline — Portfolio</title>
+  <title>Irsyad — Portfolio</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,300;9..144,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #f7f5f0;
-      --surface: #ffffff;
-      --surface2: #f0ede6;
-      --ink: #1a1814;
-      --ink2: #5a5650;
-      --ink3: #9a9590;
-      --accent: #2d5016;
+      --bg:           #f7f5f0;
+      --surface:      #ffffff;
+      --surface2:     #f0ede6;
+      --ink:          #1a1814;
+      --ink2:         #5a5650;
+      --ink3:         #9a9590;
+      --accent:       #2d5016;
       --accent-light: #e8f0e0;
-      --accent2: #8b3a1c;
-      --accent2-light: #f5e8e2;
-      --border: rgba(26,24,20,0.10);
-      --mono: 'DM Mono', monospace;
+      --accent2:      #8b3a1c;
+      --accent2-light:#f5e8e2;
+      --border:       rgba(26,24,20,0.10);
+      --mono:    'DM Mono', monospace;
       --display: 'Fraunces', serif;
-      --body: 'DM Sans', sans-serif;
+      --body:    'DM Sans', sans-serif;
     }
 
     html { scroll-behavior: smooth; }
@@ -37,7 +37,7 @@
       min-height: 100vh;
     }
 
-    /* NAV */
+    /* ── NAV ─────────────────────────────────────────── */
     nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
       background: rgba(247,245,240,0.92);
@@ -60,12 +60,39 @@
     }
     .nav-links a:hover { color: var(--ink); }
 
-    /* HERO */
+    /* ── LAYOUT ──────────────────────────────────────── */
+    .container { max-width: 900px; margin: 0 auto; padding: 0 2rem; }
+    .section    { margin-bottom: 6rem; }
+    .section-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink3);
+      margin-bottom: 2rem;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .section-label::after {
+      content: ''; flex: 1;
+      height: 1px; background: var(--border);
+    }
+    h2 {
+      font-family: var(--display);
+      font-size: 28px; font-weight: 300;
+      color: var(--ink); margin-bottom: 1rem;
+    }
+
+    /* ── HERO ────────────────────────────────────────── */
     .hero {
-      padding: 120px 2rem 80px;
+      padding: 100px 2rem 80px;
       max-width: 900px;
       margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 3rem;
+      align-items: start;
     }
+    .hero-text { flex: 1; }
     .hero-eyebrow {
       font-family: var(--mono);
       font-size: 12px;
@@ -80,37 +107,98 @@
     }
     .hero h1 {
       font-family: var(--display);
-      font-size: clamp(36px, 6vw, 64px);
+      font-size: clamp(36px, 6vw, 58px);
       font-weight: 300;
       line-height: 1.1;
       letter-spacing: -0.02em;
       color: var(--ink);
-      margin-bottom: 1.5rem;
+      margin-bottom: 0.75rem;
     }
-    .hero h1 em {
-      font-style: italic;
-      color: var(--accent);
+    .hero h1 em { font-style: italic; color: var(--accent); }
+    .hero-tagline {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--ink3);
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.04em;
     }
     .hero-desc {
-      font-size: 18px;
+      font-size: 16px;
       color: var(--ink2);
-      max-width: 600px;
-      line-height: 1.75;
-      margin-bottom: 2.5rem;
+      max-width: 520px;
+      line-height: 1.8;
+      margin-bottom: 2rem;
     }
-    .hero-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 3rem; }
-    .badge {
+    .hero-cta { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn {
       font-family: var(--mono);
-      font-size: 11px;
-      padding: 4px 10px;
-      border-radius: 4px;
-      border: 1px solid var(--border);
+      font-size: 12px;
+      padding: 10px 20px;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: all 0.2s;
+      letter-spacing: 0.04em;
+    }
+    .btn-primary {
+      background: var(--ink);
+      color: var(--bg);
+      border: 1px solid var(--ink);
+    }
+    .btn-primary:hover { background: var(--accent); border-color: var(--accent); }
+    .btn-outline {
+      background: transparent;
       color: var(--ink2);
-      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+    .btn-outline:hover { background: var(--surface2); color: var(--ink); }
+
+    /* Profile photo */
+    .hero-photo {
+      width: 160px; height: 160px;
+      border-radius: 16px;
+      object-fit: cover;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      flex-shrink: 0;
+      /* placeholder style if img fails to load */
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--mono); font-size: 11px; color: var(--ink3);
+    }
+    .hero-photo-wrap {
+      display: flex; align-items: flex-start;
+      padding-top: 20px;
     }
 
-    /* METRICS */
-    .metrics {
+    /* ── ABOUT ───────────────────────────────────────── */
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+    .about-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+    }
+    .about-block h3 {
+      font-size: 15px; font-weight: 500;
+      color: var(--ink); margin-bottom: 0.75rem;
+    }
+    .about-block p {
+      font-size: 14px; color: var(--ink2); line-height: 1.75;
+    }
+    .about-full {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      font-size: 15px; color: var(--ink2); line-height: 1.8;
+    }
+
+    /* ── SKILLS ──────────────────────────────────────── */
+    .skills-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 1px;
@@ -118,232 +206,141 @@
       border: 1px solid var(--border);
       border-radius: 12px;
       overflow: hidden;
-      margin-bottom: 5rem;
     }
-    .metric {
+    .skill-group {
       background: var(--surface);
-      padding: 2rem;
-      opacity: 0;
-      transform: translateY(12px);
-      animation: fadeUp 0.5s forwards;
+      padding: 1.75rem;
+      transition: background 0.2s;
     }
-    .metric:nth-child(2) { animation-delay: 0.1s; }
-    .metric:nth-child(3) { animation-delay: 0.2s; }
-    .metric-val {
-      font-family: var(--display);
-      font-size: 40px;
-      font-weight: 300;
-      color: var(--ink);
-      line-height: 1;
-      margin-bottom: 8px;
-    }
-    .metric-label { font-size: 13px; color: var(--ink3); }
-
-    @keyframes fadeUp {
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* LAYOUT */
-    .container { max-width: 900px; margin: 0 auto; padding: 0 2rem; }
-    .section { margin-bottom: 6rem; }
-    .section-label {
+    .skill-group:hover { background: var(--surface2); }
+    .skill-group-name {
       font-family: var(--mono);
       font-size: 11px;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: var(--ink3);
-      margin-bottom: 2rem;
-      display: flex; align-items: center; gap: 12px;
-    }
-    .section-label::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-    }
-    h2 {
-      font-family: var(--display);
-      font-size: 28px;
-      font-weight: 300;
-      color: var(--ink);
+      color: var(--accent);
+      background: var(--accent-light);
+      padding: 3px 8px;
+      border-radius: 4px;
+      display: inline-block;
       margin-bottom: 1rem;
     }
+    .skill-list { list-style: none; }
+    .skill-list li {
+      font-size: 14px;
+      color: var(--ink2);
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .skill-list li:last-child { border-bottom: none; }
+    .skill-list li::before {
+      content: '';
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: var(--ink3);
+      flex-shrink: 0;
+    }
 
-    /* PIPELINE */
-    .pipeline {
+    /* ── PROJECTS ────────────────────────────────────── */
+    .projects-grid {
       display: flex;
       flex-direction: column;
-      gap: 0;
+      gap: 1px;
+      background: var(--border);
       border: 1px solid var(--border);
       border-radius: 12px;
       overflow: hidden;
     }
-    .pipe-step {
-      display: flex;
-      align-items: flex-start;
-      gap: 1.5rem;
-      padding: 1.5rem 2rem;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      transition: background 0.2s;
-    }
-    .pipe-step:last-child { border-bottom: none; }
-    .pipe-step:hover { background: var(--surface2); }
-    .pipe-num {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--ink3);
-      min-width: 24px;
-      margin-top: 3px;
-    }
-    .pipe-content { flex: 1; }
-    .pipe-name {
-      font-size: 15px;
-      font-weight: 500;
-      color: var(--ink);
-      margin-bottom: 4px;
-    }
-    .pipe-desc { font-size: 13px; color: var(--ink2); line-height: 1.6; }
-
-    /* CARDS */
-    .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-    .card {
+    .project-card {
       background: var(--surface);
       padding: 2rem;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 1.5rem;
+      align-items: start;
       transition: background 0.2s;
     }
-    .card:hover { background: var(--surface2); }
-    .card-icon {
-      width: 32px; height: 32px;
-      background: var(--accent-light);
-      border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      margin-bottom: 1rem;
-      font-size: 16px;
-    }
-    .card h3 {
-      font-size: 15px;
-      font-weight: 500;
-      color: var(--ink);
-      margin-bottom: 8px;
-    }
-    .card p { font-size: 13px; color: var(--ink2); line-height: 1.7; }
-
-    /* TIER TABLE */
-    .tier-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    .tier-table th {
-      text-align: left;
+    .project-card:hover { background: var(--surface2); }
+    .project-num {
       font-family: var(--mono);
       font-size: 11px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
       color: var(--ink3);
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
+      margin-bottom: 0.5rem;
     }
-    .tier-table td {
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--border);
-      color: var(--ink2);
-      vertical-align: top;
+    .project-title {
+      font-size: 17px; font-weight: 500;
+      color: var(--ink); margin-bottom: 0.5rem;
     }
-    .tier-table tr:last-child td { border-bottom: none; }
-    .tier-table tr:hover td { background: var(--surface2); }
-    .tier-name { font-family: var(--mono); font-size: 13px; color: var(--ink); }
-    .tier-badge {
-      display: inline-block;
+    .project-desc {
+      font-size: 14px; color: var(--ink2);
+      line-height: 1.7; margin-bottom: 1rem;
+    }
+    .project-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag {
       font-family: var(--mono);
-      font-size: 10px;
-      padding: 2px 8px;
+      font-size: 11px;
+      padding: 3px 9px;
       border-radius: 4px;
-      margin-left: 8px;
-    }
-    .t-exact { background: var(--accent-light); color: var(--accent); }
-    .t-curve { background: var(--accent2-light); color: var(--accent2); }
-    .t-mid { background: var(--surface2); color: var(--ink2); }
-
-    /* CODE BLOCK */
-    pre {
-      background: #1a1814;
-      color: #d4cfc6;
-      font-family: var(--mono);
-      font-size: 13px;
-      padding: 1.5rem;
-      border-radius: 8px;
-      overflow-x: auto;
-      line-height: 1.7;
-    }
-    .cm { color: #6a6560; }
-    .ck { color: #a8c480; }
-    .cv { color: #e8b877; }
-    .cs { color: #c4a882; }
-
-    /* STACK TABLE */
-    .stack { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-    .stack-row {
-      display: grid;
-      grid-template-columns: 160px 1fr;
-      border-bottom: 1px solid var(--border);
-    }
-    .stack-row:last-child { border-bottom: none; }
-    .stack-key {
-      padding: 14px 20px;
-      font-family: var(--mono);
-      font-size: 12px;
-      color: var(--ink3);
-      background: var(--surface2);
-      display: flex; align-items: center;
-    }
-    .stack-val {
-      padding: 14px 20px;
-      font-size: 14px;
+      border: 1px solid var(--border);
       color: var(--ink2);
       background: var(--surface);
-      display: flex; align-items: center;
     }
+    .project-badge {
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    .badge-green { background: var(--accent-light); color: var(--accent); }
+    .badge-orange { background: var(--accent2-light); color: var(--accent2); }
 
-    /* IMPACT */
-    .impact {
+    /* ── CONTACT / FOOTER ────────────────────────────── */
+    .contact-bar {
       background: var(--ink);
       color: #f0ede6;
       border-radius: 16px;
       padding: 3rem;
-      margin-bottom: 6rem;
+      margin-bottom: 4rem;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 2rem;
+      align-items: center;
     }
-    .impact-label {
+    .contact-bar-label {
       font-family: var(--mono);
       font-size: 11px;
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: #6a6560;
-      margin-bottom: 1.5rem;
+      margin-bottom: 0.75rem;
     }
-    .impact h2 {
+    .contact-bar h2 {
       font-family: var(--display);
-      font-size: 32px;
-      font-weight: 300;
-      color: #f0ede6;
-      margin-bottom: 1.5rem;
+      font-size: 28px; font-weight: 300;
+      color: #f0ede6; margin-bottom: 0;
       line-height: 1.3;
     }
-    .impact h2 em { color: #a8c480; font-style: italic; }
-    .impact-stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 2rem;
-      margin-top: 2rem;
-      padding-top: 2rem;
-      border-top: 1px solid rgba(255,255,255,0.1);
+    .contact-bar h2 em { color: #a8c480; font-style: italic; }
+    .contact-links { display: flex; flex-direction: column; gap: 10px; }
+    .contact-link {
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 10px 20px;
+      border-radius: 6px;
+      text-decoration: none;
+      text-align: center;
+      white-space: nowrap;
+      transition: all 0.2s;
     }
-    .impact-stat-val {
-      font-family: var(--display);
-      font-size: 36px;
-      font-weight: 300;
-      color: #a8c480;
+    .contact-link-light {
+      background: rgba(255,255,255,0.1);
+      color: #f0ede6;
+      border: 1px solid rgba(255,255,255,0.15);
     }
-    .impact-stat-label { font-size: 13px; color: #6a6560; margin-top: 4px; }
+    .contact-link-light:hover { background: rgba(255,255,255,0.18); }
 
-    /* FOOTER */
     footer {
       border-top: 1px solid var(--border);
       padding: 2rem;
@@ -353,279 +350,244 @@
       color: var(--ink3);
     }
 
-    /* RESPONSIVE */
-    @media (max-width: 640px) {
-      .metrics { grid-template-columns: 1fr; }
-      .cards { grid-template-columns: 1fr; }
-      .impact-stats { grid-template-columns: 1fr; gap: 1.5rem; }
-      .stack-row { grid-template-columns: 120px 1fr; }
+    /* ── ANIMATIONS ──────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.5s ease forwards; }
+    .fade-up-1 { animation-delay: 0.1s; opacity: 0; }
+    .fade-up-2 { animation-delay: 0.2s; opacity: 0; }
+    .fade-up-3 { animation-delay: 0.3s; opacity: 0; }
+
+    /* ── RESPONSIVE ──────────────────────────────────── */
+    @media (max-width: 680px) {
       nav { padding: 0 1rem; }
-      .nav-links { gap: 1rem; }
-      .hero { padding: 100px 1rem 60px; }
+      .nav-links { gap: 1.2rem; }
+      .hero { grid-template-columns: 1fr; padding: 90px 1rem 60px; gap: 2rem; }
+      .hero-photo-wrap { display: none; }
       .container { padding: 0 1rem; }
+      .about-grid { grid-template-columns: 1fr; }
+      .skills-grid { grid-template-columns: 1fr; }
+      .project-card { grid-template-columns: 1fr; }
+      .contact-bar { grid-template-columns: 1fr; }
+      .contact-links { flex-direction: row; flex-wrap: wrap; }
     }
   </style>
 </head>
 <body>
 
+<!-- NAV -->
 <nav>
-  <a href="#" class="nav-logo">pricing-pipeline</a>
+  <a href="#" class="nav-logo">irsyad.g</a>
   <div class="nav-links">
-    <a href="#pipeline">Pipeline</a>
-    <a href="#components">Components</a>
-    <a href="#stack">Stack</a>
+    <a href="#about">About</a>
+    <a href="#skills">Skills</a>
+    <a href="#projects">Projects</a>
+    <a href="#contact">Contact</a>
   </div>
 </nav>
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-eyebrow">Data Engineering · Pricing Automation</div>
-  <h1>eSIM Pricing<br><em>Automation</em> Pipeline</h1>
-  <p class="hero-desc">
-    End-to-end system that generates competitive sell prices for 10,800+ SKUs based on real customer usage behaviour — replacing a fully manual pricing process.
-  </p>
-  <div class="hero-badges">
-    <span class="badge">Python</span>
-    <span class="badge">Pandas</span>
-    <span class="badge">NumPy</span>
-    <span class="badge">scikit-learn</span>
-    <span class="badge">SciPy</span>
-    <span class="badge">Google Sheets API</span>
-    <span class="badge">gspread</span>
-    <span class="badge">MCC Mapping</span>
-  </div>
-
-  <div class="metrics">
-    <div class="metric">
-      <div class="metric-val">10,800+</div>
-      <div class="metric-label">SKUs generated per run</div>
-    </div>
-    <div class="metric">
-      <div class="metric-val">5-tier</div>
-      <div class="metric-label">Interpolation fallback chain</div>
-    </div>
-    <div class="metric">
-      <div class="metric-val">~10%</div>
-      <div class="metric-label">Target gap vs. market</div>
-    </div>
-  </div>
-</section>
-
-<!-- PIPELINE -->
-<section class="container section" id="pipeline">
-  <p class="section-label">Architecture</p>
-  <h2>Pipeline overview</h2>
-  <p style="color: var(--ink2); margin-bottom: 2rem; font-size: 15px;">Seven stages from raw input to published prices — each stage is a separate Python module.</p>
-
-  <div class="pipeline">
-    <div class="pipe-step">
-      <span class="pipe-num">01</span>
-      <div class="pipe-content">
-        <div class="pipe-name">Raw data ingestion</div>
-        <div class="pipe-desc">Reads daily usage files (DAILY_USAGE_*.xlsx, BSN-*.xlsx) and subscription records. Normalises ICCID format, parses MCC-based area codes, converts usage to MB.</div>
-      </div>
-    </div>
-    <div class="pipe-step">
-      <span class="pipe-num">02</span>
-      <div class="pipe-content">
-        <div class="pipe-name">Subscription processor</div>
-        <div class="pipe-desc">Joins each subscription window to its daily usage records. Computes total usage, usage ratio, actual active days, and country-level consumption distribution per ICCID.</div>
-      </div>
-    </div>
-    <div class="pipe-step">
-      <span class="pipe-num">03</span>
-      <div class="pipe-content">
-        <div class="pipe-name">Behaviour factor engine</div>
-        <div class="pipe-desc">Aggregates usage ratios at package level using P50/P75 blend. Builds lookup tables for 5-tier interpolation. Applies QFF clamping and isotonic smoothing.</div>
-      </div>
-    </div>
-    <div class="pipe-step">
-      <span class="pipe-num">04</span>
-      <div class="pipe-content">
-        <div class="pipe-name">Full SKU matrix generator</div>
-        <div class="pipe-desc">Generates all combinations of (country × quota × duration days 1–30) for every known country. Countries with no historical data can be force-included via config.</div>
-      </div>
-    </div>
-    <div class="pipe-step">
-      <span class="pipe-num">05</span>
-      <div class="pipe-content">
-        <div class="pipe-name">Score interpolation</div>
-        <div class="pipe-desc">Assigns a behaviour score and confidence level to every SKU in the matrix using the 5-tier fallback chain. Stores source tier and sample count for downstream weighting.</div>
-      </div>
-    </div>
-    <div class="pipe-step">
-      <span class="pipe-num">06</span>
-      <div class="pipe-content">
-        <div class="pipe-name">Pricing calculation</div>
-        <div class="pipe-desc">Computes weighted modal cost per package from MCC-resolved country rates. Applies product-type-specific pricing formula. Outputs SIM, eSIM, and flat prices in IDR.</div>
-      </div>
-    </div>
-    <div class="pipe-step">
-      <span class="pipe-num">07</span>
-      <div class="pipe-content">
-        <div class="pipe-name">Google Sheets export</div>
-        <div class="pipe-desc">Clears and repopulates the PRICING_OUTPUT worksheet with the full SKU price table. Also exports summary reports and behaviour data to Excel files.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- COMPONENTS -->
-<section class="container section" id="components">
-  <p class="section-label">Key components</p>
-  <h2>How it works</h2>
-
-  <!-- Interpolation tiers -->
-  <div style="margin-bottom: 3rem;">
-    <h3 style="font-size: 17px; font-weight: 500; margin-bottom: 1rem;">Behaviour score interpolation</h3>
-    <p style="font-size: 14px; color: var(--ink2); margin-bottom: 1.5rem; line-height: 1.7;">Every SKU in the 10,800+ matrix gets a behaviour score via a 5-tier fallback chain. The system tries the most specific source first, falling back to increasingly general estimates.</p>
-
-    <div style="border: 1px solid var(--border); border-radius: 12px; overflow: hidden;">
-      <table class="tier-table">
-        <thead>
-          <tr>
-            <th>Tier</th>
-            <th>Source</th>
-            <th>Condition</th>
-            <th>QFF weight</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><span class="tier-name">EXACT</span> <span class="tier-badge t-exact">best</span></td>
-            <td>Same country + duration + quota</td>
-            <td>≥ 15 samples</td>
-            <td>8–35% QFF</td>
-          </tr>
-          <tr>
-            <td><span class="tier-name">REGION</span> <span class="tier-badge t-mid">good</span></td>
-            <td>Same region, same duration + quota</td>
-            <td>Any</td>
-            <td>40% QFF</td>
-          </tr>
-          <tr>
-            <td><span class="tier-name">GLOBAL</span> <span class="tier-badge t-mid">ok</span></td>
-            <td>All countries, same duration + quota</td>
-            <td>Any</td>
-            <td>55% QFF</td>
-          </tr>
-          <tr>
-            <td><span class="tier-name">NEAREST</span> <span class="tier-badge t-mid">ok</span></td>
-            <td>Closest duration (±5 days), same quota</td>
-            <td>Any</td>
-            <td>70% QFF</td>
-          </tr>
-          <tr>
-            <td><span class="tier-name">CURVE</span> <span class="tier-badge t-curve">fallback</span></td>
-            <td>Mathematical formula</td>
-            <td>Always</td>
-            <td>90% QFF</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Cards -->
-  <div class="cards">
-    <div class="card">
-      <div class="card-icon">⚖</div>
-      <h3>Quota Feasibility Factor</h3>
-      <p>Physics-informed clamp that prevents unrealistic scores. BIG DATA uses calibrated daily consumption reference. FUP and Unlimited use duration-decay curves derived from actual activity rates.</p>
-    </div>
-    <div class="card">
-      <div class="card-icon">🌍</div>
-      <h3>Weighted modal cost</h3>
-      <p>Dynamic supplier cost per package — not a flat table. MCC codes from daily data resolve to countries, each with a CNY/GB rate. Cost is usage-weighted across all roaming destinations.</p>
-    </div>
-    <div class="card">
-      <div class="card-icon">📐</div>
-      <h3>Market-calibrated formula</h3>
-      <p>BIG DATA pricing reverse-engineered from competitor data. Log-linear model fit with 5.7% mean error: rate = 0.5848 + 0.065·ln(day) − 0.1016·ln(GB). Reduced overpricing from +53% to target 10–15%.</p>
-    </div>
-    <div class="card">
-      <div class="card-icon">〰</div>
-      <h3>Isotonic smoothing</h3>
-      <p>BIG DATA scores are monotonically non-decreasing by duration. FUP and Unlimited are monotonically decreasing — engagement drops over longer subscriptions. Enforced via scikit-learn IsotonicRegression.</p>
-    </div>
-  </div>
-
-  <!-- Formula block -->
-  <div style="margin-top: 3rem;">
-    <h3 style="font-size: 17px; font-weight: 500; margin-bottom: 1rem;">Pricing formula by product type</h3>
-    <pre><span class="cm"># BIG DATA — market-calibrated log-linear</span>
-<span class="ck">rate</span> = <span class="cv">0.5848</span> + <span class="cv">0.065</span> * np.log(day) - <span class="cv">0.1016</span> * np.log(gb)
-modal_adj = modal * gb * behaviour_score * rate
-
-<span class="cm"># FUP / Unlimited — behaviour score with duration decay</span>
-modal_adj = modal * behaviour_score * days * quota_gb
-
-<span class="cm"># Final price (IDR)</span>
-cost_idr = (modal_adj + device_cost) * cny_rate
-price = margin(cost_idr)  <span class="cm"># rounds to nearest 10,000 + 9,000</span></pre>
-  </div>
-</section>
-
-<!-- IMPACT -->
-<section class="container">
-  <div class="impact">
-    <p class="impact-label">Business impact</p>
-    <h2>From manual spreadsheets<br>to <em>fully automated</em> pricing</h2>
-    <p style="color: #9a9590; font-size: 15px; max-width: 500px; line-height: 1.75;">
-      The system replaced a manual process where each package was priced individually. It now generates a complete, market-competitive price list in a single pipeline run.
+  <div class="hero-text fade-up">
+    <div class="hero-eyebrow">Data Analytics · Automation</div>
+    <h1>Irsyad <em>G.</em></h1>
+    <p class="hero-tagline">Data Analyst &nbsp;·&nbsp; Pricing Automation &nbsp;·&nbsp; Aspiring Data Engineer</p>
+    <p class="hero-desc">
+      I build data pipelines and automation tools that turn messy operational data into
+      clear, actionable outputs — from pricing engines to business intelligence exports.
     </p>
-    <div class="impact-stats">
-      <div>
-        <div class="impact-stat-val">10,800+</div>
-        <div class="impact-stat-label">SKUs priced automatically</div>
-      </div>
-      <div>
-        <div class="impact-stat-val">53% → 15%</div>
-        <div class="impact-stat-label">Avg overpricing vs. market</div>
-      </div>
-      <div>
-        <div class="impact-stat-val">5.7%</div>
-        <div class="impact-stat-label">Pricing model fit error</div>
-      </div>
+    <div class="hero-cta">
+      <a href="#projects" class="btn btn-primary">View Projects</a>
+      <a href="#contact" class="btn btn-outline">Get in Touch</a>
+    </div>
+  </div>
+  <div class="hero-photo-wrap fade-up fade-up-2">
+    <!-- Replace src with your actual photo path, e.g. assets/profile.jpg -->
+    <img
+      src="assets/profile.jpg"
+      alt="Irsyad G."
+      class="hero-photo"
+      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+    />
+    <div class="hero-photo" style="display:none; background:var(--surface2);">
+      <span style="font-family:var(--mono);font-size:11px;color:var(--ink3);text-align:center;padding:1rem;">
+        Add photo<br>assets/profile.jpg
+      </span>
     </div>
   </div>
 </section>
 
-<!-- STACK -->
-<section class="container section" id="stack">
-  <p class="section-label">Technical stack</p>
-  <h2>Built with</h2>
+<!-- ABOUT -->
+<section class="container section" id="about">
+  <p class="section-label">About me</p>
 
-  <div class="stack">
-    <div class="stack-row">
-      <div class="stack-key">Language</div>
-      <div class="stack-val">Python 3.10+</div>
+  <div class="about-full">
+    I'm a data analyst working in the telecom eSIM industry, focused on turning raw operational
+    data into automated systems that save time and improve decision-making. My background spans
+    data processing, pricing strategy, and full-stack tooling — from Python pipelines that run
+    end-to-end pricing models, to Flask web apps deployed on a local LAN for the ops team.
+    <br><br>
+    I enjoy solving the gap between raw data and actionable insight — especially when it means
+    replacing a manual process entirely. Currently exploring data engineering and expanding into
+    machine learning applications for business forecasting.
+  </div>
+
+  <div class="about-grid">
+    <div class="about-block">
+      <h3>Background</h3>
+      <p>
+        Operations &amp; data analyst at a telecom reseller. Hands-on with subscription data,
+        roaming usage analytics, cost modelling, and business intelligence reporting.
+        Self-taught in Python with a focus on applied data work.
+      </p>
     </div>
-    <div class="stack-row">
-      <div class="stack-key">Data</div>
-      <div class="stack-val">Pandas · NumPy</div>
+    <div class="about-block">
+      <h3>Career Goal</h3>
+      <p>
+        Transition into a data engineering or analytics engineering role — building reliable
+        data systems at scale. Interested in dbt, pipeline orchestration (Airflow), and
+        applying statistical models to real business problems.
+      </p>
     </div>
-    <div class="stack-row">
-      <div class="stack-key">Modelling</div>
-      <div class="stack-val">SciPy (curve_fit, lstsq) · scikit-learn (IsotonicRegression)</div>
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section class="container section" id="skills">
+  <p class="section-label">Skills</p>
+  <h2>What I work with</h2>
+
+  <div class="skills-grid">
+    <div class="skill-group">
+      <span class="skill-group-name">Data & Python</span>
+      <ul class="skill-list">
+        <li>Python (Pandas, NumPy)</li>
+        <li>SciPy / scikit-learn</li>
+        <li>Data cleaning & wrangling</li>
+        <li>Statistical modelling</li>
+        <li>Excel / openpyxl automation</li>
+      </ul>
     </div>
-    <div class="stack-row">
-      <div class="stack-key">Integration</div>
-      <div class="stack-val">gspread · Google Sheets API v4 · Google Drive API</div>
+    <div class="skill-group">
+      <span class="skill-group-name">Database & APIs</span>
+      <ul class="skill-list">
+        <li>SQL (PostgreSQL)</li>
+        <li>Google Sheets API</li>
+        <li>gspread / Drive API</li>
+        <li>REST API integration</li>
+        <li>psycopg2</li>
+      </ul>
     </div>
-    <div class="stack-row">
-      <div class="stack-key">Config</div>
-      <div class="stack-val">JSON-based country, MCC, and rate mappings</div>
+    <div class="skill-group">
+      <span class="skill-group-name">Tools & Infra</span>
+      <ul class="skill-list">
+        <li>Flask (web apps)</li>
+        <li>Looker Studio</li>
+        <li>Git / GitHub</li>
+        <li>Data visualization</li>
+        <li>Windows task automation</li>
+      </ul>
     </div>
-    <div class="stack-row">
-      <div class="stack-key">Output</div>
-      <div class="stack-val">Google Sheets (live) · Excel (.xlsx)</div>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section class="container section" id="projects">
+  <p class="section-label">Projects</p>
+  <h2>Selected work</h2>
+
+  <div class="projects-grid">
+
+    <!-- Project 1 -->
+    <div class="project-card">
+      <div>
+        <div class="project-num">01</div>
+        <div class="project-title">eSIM Pricing Automation Pipeline</div>
+        <p class="project-desc">
+          End-to-end Python pipeline that replaces a fully manual pricing process.
+          Ingests raw daily usage and subscription XLSX files, computes behaviour-adjusted
+          cost estimates per SKU using a 5-tier interpolation model, and publishes
+          10,800+ prices to Google Sheets automatically each run. Includes a market-calibrated
+          log-linear pricing formula (5.7% error vs. benchmark) and isotonic regression smoothing.
+        </p>
+        <div class="project-tags">
+          <span class="tag">Python</span>
+          <span class="tag">Pandas</span>
+          <span class="tag">scikit-learn</span>
+          <span class="tag">SciPy</span>
+          <span class="tag">Google Sheets API</span>
+          <span class="tag">Statistical Modelling</span>
+        </div>
+      </div>
+      <span class="project-badge badge-green">Live</span>
+    </div>
+
+    <!-- Project 2 -->
+    <div class="project-card">
+      <div>
+        <div class="project-num">02</div>
+        <div class="project-title">ICCID Checker — LAN Web App</div>
+        <p class="project-desc">
+          Local network web app built with Flask and PostgreSQL for the operations team.
+          Allows team members to look up any SIM card (ICCID) and instantly see usage,
+          quota, roaming country breakdown, and proportional cost — with a McKinsey-style
+          card UI. Supports bulk lookup (up to 50 ICCIDs at once) via comma/newline input.
+        </p>
+        <div class="project-tags">
+          <span class="tag">Flask</span>
+          <span class="tag">PostgreSQL</span>
+          <span class="tag">psycopg2</span>
+          <span class="tag">HTML/CSS</span>
+          <span class="tag">LAN Deployment</span>
+        </div>
+      </div>
+      <span class="project-badge badge-green">Live</span>
+    </div>
+
+    <!-- Project 3 -->
+    <div class="project-card">
+      <div>
+        <div class="project-num">03</div>
+        <div class="project-title">Business Intelligence Export — 11-Sheet BI Report</div>
+        <p class="project-desc">
+          Automated BI export module that generates 11 analysis sheets from PostgreSQL
+          data — covering executive summary, country breakdown, duration/quota segmentation,
+          SKU profitability with margin analysis, channel performance, cross-tab matrices,
+          and churn/anomaly detection with estimated waste per ICCID. Outputs both
+          Looker Studio-ready CSV files and an internal Excel workbook.
+        </p>
+        <div class="project-tags">
+          <span class="tag">Pandas</span>
+          <span class="tag">PostgreSQL</span>
+          <span class="tag">Looker Studio</span>
+          <span class="tag">Excel / openpyxl</span>
+          <span class="tag">Business Intelligence</span>
+        </div>
+      </div>
+      <span class="project-badge badge-orange">Internal</span>
+    </div>
+
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="container" id="contact">
+  <div class="contact-bar">
+    <div>
+      <p class="contact-bar-label">Get in touch</p>
+      <h2>Let's work<br>on something <em>together</em></h2>
+    </div>
+    <div class="contact-links">
+      <a href="mailto:ops@gkomunika.com" class="contact-link contact-link-light">ops@gkomunika.com</a>
+      <a href="https://github.com/Irsyad-g" class="contact-link contact-link-light" target="_blank" rel="noopener">GitHub → Irsyad-g</a>
     </div>
   </div>
 </section>
 
 <footer>
-  eSIM Pricing Pipeline · Built with Python · Data-driven pricing automation
+  Irsyad G. &nbsp;·&nbsp; Data Analyst &nbsp;·&nbsp; Built with vanilla HTML &amp; CSS
 </footer>
 
 </body>

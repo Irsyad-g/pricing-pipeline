@@ -198,7 +198,7 @@ class PipelineGUI:
                 self._log(f"  ✅ {Path(f).name}", "#6fcf97")
 
             # ── IMPORT PIPELINE ──────────────────────────────
-            from config import RAW_DATA, OUTPUT_FILE, GROUP_MAP, REGION_JSON, GROUP_REGION
+            from config import RAW_DATA, OUTPUT_FILE
             from loaders import load_daily_usage, load_subscription
             from rules.quota_rules import extract_quota
             from processors import process_subscription, build_country_distribution, split_country_dist_by_region
@@ -239,7 +239,7 @@ class PipelineGUI:
             )
 
             final, country_df = step(3, "Process subscription",
-                process_subscription, sub, daily, GROUP_MAP)
+                process_subscription, sub, daily)
 
             step(4, "Build pivots & distributions",
                 lambda: (
@@ -263,6 +263,7 @@ class PipelineGUI:
                 export_to_db,
                 daily=daily, sub=sub, final=final,
                 bf_full=bf_full, pricing_df=pricing_df,
+                country_df=country_df,
                 daily_files=daily_files, sub_files=sub_files
             )
 

@@ -114,6 +114,7 @@ def main():
         final=final,
         bf_full=bf_full,
         pricing_df=pricing_df,
+        country_df=country_df,
         daily_files=daily_files,
         sub_files=sub_files
     )

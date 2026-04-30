@@ -1,0 +1,12 @@
+{
+  "enabledPlugins": {
+    "dbt-skills@data-engineering-skills": true
+  },
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import ast, sys; ast.parse\\(open\\('run_margin.py'\\).read\\(\\)\\); print\\('run_margin.py OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('exporters/db_exporter.py'\\).read\\(\\)\\); print\\('db_exporter.py OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('processors/cost_calculator.py'\\).read\\(\\)\\); print\\('cost_calculator.py OK'\\)\")"
+    ]
+  }
+}
