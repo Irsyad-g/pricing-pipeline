@@ -254,4 +254,4 @@ pricing-pipeline/
 
 ## Privacy
 
-Repository contains source code only. All customer data, supplier pricing, credentials, raw XLSX files, and operational scripts are excluded via `.gitignore`.
+Repository contains source code only. All customer data, supplier pricing, credentials , raw XLSX files, and operational scripts are excluded via `.gitignore`.
