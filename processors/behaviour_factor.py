@@ -217,7 +217,13 @@ def generate_full_sku_matrix(final_df):
 
     SPECIAL_DAY_RULES = {
         "HAJ": [7, 15, 30, 40, 60],
-        "SAU": list(range(1,31)) + [40,60]
+        "SAU": list(range(1,31)) + [40,60],
+        "ASIA":list(range(1,31)) + [360],
+        "ME":list(range(1,31)) + [360],
+        "AUNZPLUS":list(range(1,31)) + [360],
+        "EU70":list(range(1,31)) + [360],
+        "AMR":list(range(1,31)) + [360],
+        "WORLD":list(range(1,31)) + [360]
     }
     SPECIAL_QUOTA_RULES = {
         "JPNMAX": ["10"],

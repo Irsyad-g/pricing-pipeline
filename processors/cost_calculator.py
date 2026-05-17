@@ -271,7 +271,4 @@ def match_orders_to_subscriptions(orders_df, final_df, active_sub_df=None):
     print(f"  SKU match: {ok} | Fallback: {fallback} | Country: {country} "
           f"| Masih aktif: {active} | Tidak ada data: {no_data}")
 
-    # drop temp column
-    matched.drop(columns=["package"], inplace=True, errors="ignore")
-
     return matched, diagnostics_df

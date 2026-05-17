@@ -29,6 +29,7 @@ FUP_ORDER = ["500", "800", "1", "15", "2", "3", "5"]
 # Minimum price increment per tier step
 MIN_FUP_STEP = 10000       # FUP: min 10rb antar tier
 MIN_BD_STEP  = 10000       # BD < 20GB: min 10rb antar tier
+MIN_UNL_STEP = 10000       # UNL: min 10rb antar consecutive duration
 
 
 def round_9000(price):
@@ -86,10 +87,30 @@ def _stack_bd(df, bd_mask, price_cols):
     return fixes
 
 
+def _stack_unl_duration(df, unl_mask, price_cols):
+    """Phase 1c: enforce UNL duration monotonicity with min step."""
+    fixes = 0
+    for negara, group_idx in df[unl_mask].groupby("NEGARA").groups.items():
+        group = df.loc[group_idx].sort_values("HARI")
+        if len(group) <= 1:
+            continue
+        indices = group.index.tolist()
+        for col in price_cols:
+            for i in range(1, len(indices)):
+                prev_price = df.at[indices[i - 1], col]
+                min_price = prev_price + MIN_UNL_STEP
+                if df.at[indices[i], col] < min_price:
+                    df.at[indices[i], col] = round_9000(min_price)
+                    if col == "HARGA_FLAT":
+                        fixes += 1
+    return fixes
+
+
 def normalize_cross_type(df):
     """
     Phase 1:  FUP stacking (min 10rb antar tier)
     Phase 1b: BD stacking (min 10rb, scaled by GB diff)
+    Phase 1c: UNL duration stacking (min 10rb antar HARI)
     Phase 2:  Cross-type: BD ≥ FUP for same total GB
     Phase 2b: FUP ceiling: FUP < BD for exact same total GB
     Phase 3:  Re-stack setelah cross-type adjustments
@@ -99,10 +120,12 @@ def normalize_cross_type(df):
 
     fup_mask = df["TYPE"] == "FUP"
     bd_mask  = df["TYPE"] == "BIG DATA"
+    unl_mask = df["TYPE"] == "PURE UNLIMITED"
 
     # ── PHASE 1: STACKING ──────────────────────────────
     fup_stacks = _stack_fup(df, fup_mask, price_cols)
     bd_stacks  = _stack_bd(df, bd_mask, price_cols)
+    unl_stacks = _stack_unl_duration(df, unl_mask, price_cols)
 
     # ── PHASE 2: BD ≥ FUP (total GB based) ─────────────
     # For each BD SKU, find FUP tier where daily_rate ≤ BD_GB/hari
@@ -196,7 +219,8 @@ def normalize_cross_type(df):
     # ── PHASE 3: RE-STACK ──────────────────────────────
     restack_fup = _stack_fup(df, fup_mask, price_cols)
     restack_bd  = _stack_bd(df, bd_mask, price_cols)
-    restack_fixes = restack_fup + restack_bd
+    restack_unl = _stack_unl_duration(df, unl_mask, price_cols)
+    restack_fixes = restack_fup + restack_bd + restack_unl
 
     # ── PHASE 4: Recalculate Cost Opportunity ──────────
     if "HARGA_BF_FLAT" in df.columns:
@@ -208,6 +232,7 @@ def normalize_cross_type(df):
     print(f"\n🔄 CROSS-TYPE NORMALIZATION + STACKING:")
     print(f"  FUP stacking fixes:    {fup_stacks}")
     print(f"  BD stacking fixes:     {bd_stacks}")
+    print(f"  UNL duration fixes:    {unl_stacks}")
     print(f"  BD raised (≥ FUP):     {bd_raised}")
     print(f"  BD raised (exact GB):  {fup_capped}")
     print(f"  Re-stack fixes:        {restack_fixes}")

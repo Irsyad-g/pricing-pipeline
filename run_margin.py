@@ -75,6 +75,9 @@ def get_rate(country_str):
     return rate if rate else GLOBAL_RATE
 
 
+MARGIN_GSHEET_ID = "1LFVdR6FhlfNj-huGLogL9jMhEx-PlrqiNf225-Lxzao"
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Generate margin report")
     parser.add_argument("--start-date", type=str, default=None,
@@ -342,10 +345,16 @@ def load_tokopedia_revenue():
 
 def load_db_data(engine):
     with engine.connect() as conn:
+        # country usage per iccid+package: join daily_usage ke final_output by date range
+        # sehingga usage tiap hari diassign ke paket yang aktif saat itu
         country_usage = pd.read_sql(text("""
-            SELECT iccid, country, SUM(country_usage_mb) as usage_mb
-            FROM processed.country_usage
-            GROUP BY iccid, country
+            SELECT du.iccid, fo.package, du.area AS country, SUM(du.usage_mb) AS usage_mb
+            FROM raw.daily_usage du
+            JOIN processed.final_output fo
+                ON du.iccid = fo.iccid
+                AND du.date_only >= fo.start_date
+                AND du.date_only <= fo.end_date
+            GROUP BY du.iccid, fo.package, du.area
         """), conn)
 
         final = pd.read_sql(text("""
@@ -361,25 +370,12 @@ def load_db_data(engine):
             FROM raw.subscription
         """), conn)
 
-    # strip iccid — nilai DB bisa punya whitespace tersembunyi
     country_usage["iccid"] = country_usage["iccid"].astype(str).str.strip()
 
     if country_usage.empty:
-        # processed.country_usage belum diisi upstream pipeline (db_exporter tidak menulis tabel ini)
-        # fallback ke raw.daily_usage yang sudah ada di DB dengan struktur MCC yang sama
-        print("  [WARNING] processed.country_usage kosong — upstream pipeline belum populate tabel ini.")
-        print("  [FALLBACK] Menggunakan raw.daily_usage sebagai sumber country breakdown.")
-        with engine.connect() as conn:
-            country_usage = pd.read_sql(text("""
-                SELECT iccid, area AS country, SUM(usage_mb) AS usage_mb
-                FROM raw.daily_usage
-                GROUP BY iccid, area
-            """), conn)
-        country_usage["iccid"] = country_usage["iccid"].astype(str).str.strip()
-        if country_usage.empty:
-            print("  [WARNING] raw.daily_usage juga kosong. Negara_Detail akan kosong.")
+        print("  [WARNING] country_usage per package kosong — raw.daily_usage atau processed.final_output mungkin kosong.")
     else:
-        print(f"  country_usage: {len(country_usage)} rows dari processed.country_usage")
+        print(f"  country_usage: {len(country_usage)} rows (per iccid+package dari raw.daily_usage)")
 
     # active_sub: non-expired only — dipakai untuk klasifikasi ACTIVE di matching
     active_sub = all_sub[all_sub["status"].str.lower() != "expired"].copy().reset_index(drop=True)
@@ -402,6 +398,84 @@ def apply_date_filter(df, start_date=None, end_date=None):
     if start_date or end_date:
         print(f"  After date filter: {len(filtered)} dari {len(df)} baris")
     return filtered
+
+
+def _gsheet_connect_by_id(sheet_id):
+    import gspread
+    from oauth2client.service_account import ServiceAccountCredentials
+    scope = [
+        "https://spreadsheets.google.com/feeds",
+        "https://www.googleapis.com/auth/drive",
+    ]
+    creds = ServiceAccountCredentials.from_json_keyfile_name(
+        Path("config/google_credentials.json"), scope
+    )
+    client = gspread.authorize(creds)
+    return client.open_by_key(sheet_id)
+
+
+def _push_df_to_worksheet(sheet, tab_name, df):
+    try:
+        ws = sheet.worksheet(tab_name)
+        ws.clear()
+    except Exception:
+        ws = sheet.add_worksheet(
+            title=tab_name,
+            rows=str(len(df) + 100),
+            cols=str(len(df.columns) + 5),
+        )
+    data = df.copy()
+    for col in data.columns:
+        if pd.api.types.is_datetime64_any_dtype(data[col]):
+            data[col] = data[col].dt.strftime("%Y-%m-%d").fillna("")
+    data = data.replace([np.nan, np.inf, -np.inf], "").fillna("")
+    rows = [data.columns.tolist()] + data.values.tolist()
+    ws.update(rows)
+    print(f"  → '{tab_name}': {len(df)} baris")
+
+
+def _add_negara_col(df):
+    """Parse Negara from SKU (index 1 of GK-COUNTRY-DAYS-QUOTA)."""
+    def _parse(sku):
+        parts = str(sku).upper().split("-")
+        return parts[1] if len(parts) >= 2 else "UNK"
+    out = df.copy()
+    if "Negara" not in out.columns:
+        out.insert(out.columns.get_loc("SKU") + 1, "Negara", out["SKU"].apply(_parse))
+    return out
+
+
+def push_margin_to_gsheet(detail_df, summary_sku_df, summary_country_df=None, country_dist_df=None):
+    DETAIL_COLS = [
+        "Channel", "Product_Name", "Invoice", "ICCID", "SKU", "Negara",
+        "Product_Type", "Month", "Harga_Jual", "Komisi_Pct",
+        "Real_Cost_CNY", "Total_Usage_MB", "Total_Quota_MB",
+        "Komisi_IDR", "Net_Revenue", "Real_Cost_IDR",
+        "Total_Usage_Display", "Ratio", "Total_Quota_Display",
+        "Margin_IDR", "Margin_Pct", "Status", "Match_Method", "Negara_Detail",
+    ]
+    SKU_COLS = [
+        "SKU", "Negara",
+        "Total_Invoice", "Total_ICCID",
+        "Total_Pendapatan", "Total_Komisi", "Total_Net_Revenue",
+        "Total_Cost_IDR", "Total_Margin_IDR", "Avg_Margin_Pct", "Status",
+    ]
+
+    detail  = _add_negara_col(detail_df)
+    detail  = detail[[c for c in DETAIL_COLS if c in detail.columns]]
+
+    sku_out = _add_negara_col(summary_sku_df)
+    sku_out = sku_out[[c for c in SKU_COLS if c in sku_out.columns]]
+
+    print(f"\nPushing ke Google Sheets (id: {MARGIN_GSHEET_ID})...")
+    sheet = _gsheet_connect_by_id(MARGIN_GSHEET_ID)
+    _push_df_to_worksheet(sheet, "Detail per ICCID",    detail)
+    _push_df_to_worksheet(sheet, "Summary per SKU",     sku_out)
+    if summary_country_df is not None and not summary_country_df.empty:
+        _push_df_to_worksheet(sheet, "Summary per Country", summary_country_df)
+    if country_dist_df is not None and not country_dist_df.empty:
+        _push_df_to_worksheet(sheet, "Country Usage Dist",  country_dist_df)
+    print("GSheet push selesai!")
 
 
 def extract_fallback_candidates(diagnostics_df):
@@ -863,24 +937,25 @@ if __name__ == "__main__":
             print(f"  Backlog resolved: {len(resolvable)} baris sudah bisa dihitung")
 
     # ── NEGARA DETAIL ─────────────────────────────────────────
+    # group by iccid+package agar usage tiap paket tidak tercampur antar topup
     country_usage["Rate_CNY"]     = country_usage["country"].apply(get_rate)
     country_usage["Cost_CNY"]     = country_usage["usage_mb"] / 1024 * country_usage["Rate_CNY"]
-    iccid_total                   = country_usage.groupby("iccid")["usage_mb"].transform("sum")
-    country_usage["usage_pct"]    = (country_usage["usage_mb"] / iccid_total * 100).round(1)
+    iccid_pkg_total               = country_usage.groupby(["iccid", "package"])["usage_mb"].transform("sum")
+    country_usage["usage_pct"]    = (country_usage["usage_mb"] / iccid_pkg_total * 100).round(1)
     country_usage["country_name"] = country_usage["country"].apply(
         lambda x: MCC_MAP.get(str(extract_mcc(x)), x)
     )
     country_detail = (
         country_usage
-        .sort_values(["iccid", "usage_pct"], ascending=[True, False])
-        .groupby("iccid")
+        .sort_values(["iccid", "package", "usage_pct"], ascending=[True, True, False])
+        .groupby(["iccid", "package"])
         .apply(lambda d: ", ".join(
             f"{row['country_name']} ({row['usage_pct']}%, {row['Cost_CNY']:.2f} CNY)"
             for _, row in d.iterrows()
         ), include_groups=False)
         .reset_index()
     )
-    country_detail.columns = ["iccid", "Negara_Detail"]
+    country_detail.columns = ["iccid", "package", "Negara_Detail"]
 
     # ── BUILD REPORT ──────────────────────────────────────────
     df = orders.copy()
@@ -903,8 +978,15 @@ if __name__ == "__main__":
     df["Ratio"] = (
         df["Total_Usage_MB"].fillna(0) / df["Total_Quota_MB"].replace(0, np.nan)
     ).fillna(0).round(4)
-    df = df.merge(country_detail.rename(columns={"iccid": "ICCID"}), on="ICCID", how="left")
+    df = df.merge(
+        country_detail.rename(columns={"iccid": "ICCID"}),
+        on=["ICCID", "package"],
+        how="left"
+    )
     df["Negara_Detail"] = df["Negara_Detail"].fillna("UNKNOWN")
+    df["Negara"] = df["SKU"].apply(
+        lambda s: str(s).upper().split("-")[1] if len(str(s).upper().split("-")) >= 2 else "UNK"
+    )
 
     df["Komisi_Pct"] = df.apply(lambda r: get_commission(r["Channel"], r["Product_Type"]), axis=1)
     df["Komisi_IDR"]  = (df["Harga_Jual"] * df["Komisi_Pct"]).round(2)
@@ -951,6 +1033,54 @@ if __name__ == "__main__":
         ["RUGI", "BAGUS"], default="NORMAL"
     )
     summary_sku = summary_sku.sort_values("Avg_Margin_Pct")
+
+    # ── SUMMARY PER COUNTRY ───────────────────────────────────
+    summary_country = (
+        df.groupby(["Negara", "Month"])
+        .agg(
+            Total_Invoice     = ("Invoice",       "nunique"),
+            Total_ICCID       = ("ICCID",         "count"),
+            Total_Pendapatan  = ("Harga_Jual",    "sum"),
+            Total_Komisi      = ("Komisi_IDR",    "sum"),
+            Total_Net_Revenue = ("Net_Revenue",   "sum"),
+            Total_Cost_IDR    = ("Real_Cost_IDR", "sum"),
+            Total_Margin_IDR  = ("Margin_IDR",    "sum"),
+            ICCID_Rugi        = ("Status",        lambda x: (x == "RUGI").sum()),
+            ICCID_Normal      = ("Status",        lambda x: (x == "NORMAL").sum()),
+            ICCID_Bagus       = ("Status",        lambda x: (x == "BAGUS").sum()),
+        )
+        .reset_index()
+    )
+    for col in ["Total_Pendapatan", "Total_Komisi", "Total_Net_Revenue",
+                "Total_Cost_IDR", "Total_Margin_IDR"]:
+        summary_country[col] = summary_country[col].round(2)
+    summary_country["Avg_Margin_Pct"] = (
+        summary_country["Total_Margin_IDR"] / summary_country["Total_Net_Revenue"].replace(0, np.nan)
+    ).round(4)
+    summary_country["Status"] = np.select(
+        [summary_country["Avg_Margin_Pct"] < 0, summary_country["Avg_Margin_Pct"] >= 0.30],
+        ["RUGI", "BAGUS"], default="NORMAL"
+    )
+    summary_country = summary_country.sort_values(["Negara", "Month"])
+
+    # ── COUNTRY USAGE DISTRIBUTION ────────────────────────────
+    df_negara_map = df[["ICCID", "Negara", "package"]].drop_duplicates().rename(columns={"ICCID": "iccid"})
+    cu_dist = country_usage.merge(df_negara_map, on=["iccid", "package"], how="inner")
+    cu_dist["actual_country"] = cu_dist["country"].apply(
+        lambda x: MCC_MAP.get(str(extract_mcc(x)), x)
+    )
+    country_dist = (
+        cu_dist.groupby(["Negara", "actual_country"])["usage_mb"]
+        .sum()
+        .reset_index()
+    )
+    neg_total = country_dist.groupby("Negara")["usage_mb"].transform("sum")
+    country_dist["Usage_Pct"] = (country_dist["usage_mb"] / neg_total * 100).round(2)
+    country_dist = country_dist.rename(columns={
+        "actual_country": "Actual_Country",
+        "usage_mb":       "Total_Usage_MB",
+    })
+    country_dist = country_dist.sort_values(["Negara", "Usage_Pct"], ascending=[True, False])
 
     summary_month = (
         df.groupby("Month")
@@ -1007,9 +1137,11 @@ if __name__ == "__main__":
         if "Match_Method" not in df.columns:
             df["Match_Method"] = "SKU_MATCH"
 
-        summary_month.to_excel( writer, sheet_name="Summary per Bulan", index=False)
-        total.to_excel(         writer, sheet_name="Summary Total",      index=False)
-        backlog.to_excel(       writer, sheet_name="Backlog",            index=False)
+        summary_country.to_excel(writer, sheet_name="Summary per Country", index=False)
+        summary_month.to_excel( writer, sheet_name="Summary per Bulan",  index=False)
+        total.to_excel(         writer, sheet_name="Summary Total",       index=False)
+        backlog.to_excel(       writer, sheet_name="Backlog",             index=False)
+        country_dist.to_excel(  writer, sheet_name="Country Usage Dist",  index=False)
 
         # diagnostic sheet — untuk review NO_ORDER_DATA
         if not diagnostics_df.empty:
@@ -1037,8 +1169,10 @@ if __name__ == "__main__":
                     "Total_Cost_IDR", "Total_Margin_IDR", "Total_Pendapatan_Gross"]
         PCT_COLS = ["Margin_Pct", "Avg_Margin_Pct"]
 
-        style_sheet(wb["Summary per Bulan"], pct_cols=PCT_COLS, idr_cols=IDR_COLS)
-        style_sheet(wb["Summary Total"],     pct_cols=PCT_COLS, idr_cols=IDR_COLS)
+        style_sheet(wb["Summary per Country"], pct_cols=PCT_COLS, idr_cols=IDR_COLS, status_col="Status")
+        style_sheet(wb["Summary per Bulan"],   pct_cols=PCT_COLS, idr_cols=IDR_COLS)
+        style_sheet(wb["Summary Total"],       pct_cols=PCT_COLS, idr_cols=IDR_COLS)
+        style_sheet(wb["Country Usage Dist"],  pct_cols=["Usage_Pct"], idr_cols=[])
 
         if not diagnostics_df.empty:
             ws_diag = wb["Diagnostics"]
@@ -1080,3 +1214,5 @@ if __name__ == "__main__":
         new_count = (~fallback_cands["Already_In_Fallback"]).sum()
         print(f"  Fallback Candidates: {len(fallback_cands)} pairs "
               f"({new_count} baru) → lihat sheet + {OUTPUT_DIR}/sku_fallback_candidates.json")
+
+    push_margin_to_gsheet(df, summary_sku, summary_country, country_dist)

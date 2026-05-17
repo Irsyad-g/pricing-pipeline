@@ -765,6 +765,19 @@ def export_pricing(bf_full, country_df):
         df.loc[below, col_price] = df.loc[below, col_cost].apply(
             lambda c: round_9000(c / (1 - TARGET_MARGIN))
         )
+    # UNL: re-enforce duration monotonicity after safety floor.
+    # Safety floor can invert UNL prices when MODAL_ADJ is non-monotonic by HARI
+    # (happens when BF × HARI decreases — shorter duration becomes more expensive).
+    # Pure forward-max pass only — no cap, no growth rate, so no negative margins.
+    unl_mask = df["TYPE"] == "PURE UNLIMITED"
+    if unl_mask.any():
+        for _, group_idx in df[unl_mask].groupby("NEGARA").groups.items():
+            group_sorted = df.loc[group_idx].sort_values("HARI")
+            indices = group_sorted.index.tolist()
+            for col in ["HARGA_FLAT", "HARGA_SIM", "HARGA_ESIM"]:
+                for i in range(1, len(indices)):
+                    if df.at[indices[i], col] < df.at[indices[i - 1], col]:
+                        df.at[indices[i], col] = df.at[indices[i - 1], col]
    
     # =====================
     # DEBUG: Print opportunity impact
