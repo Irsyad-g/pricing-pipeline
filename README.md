@@ -3,49 +3,142 @@
 ![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat&logo=python&logoColor=white)
 ![Pandas](https://img.shields.io/badge/Pandas-2.x-150458?style=flat&logo=pandas&logoColor=white)
 ![scikit-learn](https://img.shields.io/badge/scikit--learn-latest-F7931E?style=flat&logo=scikit-learn&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-336791?style=flat&logo=postgresql&logoColor=white)
 ![Google Sheets](https://img.shields.io/badge/Google_Sheets_API-v4-34A853?style=flat&logo=google-sheets&logoColor=white)
 ![Flask](https://img.shields.io/badge/Flask-3.x-000000?style=flat&logo=flask&logoColor=white)
 
-> End-to-end automated pricing engine that generates competitive sell prices for **10,800+ SKUs** based on real customer usage behaviour — replacing a fully manual process.
+> End-to-end automated pricing and margin intelligence system for a multi-country telecom eSIM reseller — replacing fully manual processes across pricing, cost analysis, and revenue reconciliation.
 
 ---
 
-## Description
+## Overview
 
-A data pipeline built for a telecom reseller operating in the eSIM market. The system ingests raw daily usage and subscription data, computes behaviour-adjusted cost estimates per SKU, and publishes competitive prices directly to Google Sheets — automatically, every run.
+A production data pipeline serving an eSIM operator with roaming products across Africa, Asia, Europe, the Americas, and Oceania. The system ingests raw ICCID-level usage and subscription data, computes behaviour-adjusted cost estimates per SKU, publishes competitive sell prices to Google Sheets, and reconciles multi-channel marketplace revenue against actual COGS — automatically, every run.
 
-| | |
-|---|---|
-| **Product types** | BIG DATA · FUP (Fixed-speed Unlimited) · Pure Unlimited |
-| **Countries covered** | 16+ roaming destinations |
-| **SKUs generated** | 10,800+ per run |
-| **Pricing model error** | ~5.7% vs. market benchmark |
+| Metric | Value |
+|--------|-------|
+| SKUs generated per run | 10,800+ |
+| Roaming countries covered | 16+ |
+| Pricing model error vs. market benchmark | ~5.7% |
+| Product types | BIG DATA · FUP · Pure Unlimited |
+| Sales channels reconciled | Shopee · Tokopedia · Shopify |
+
+---
+
+## System Architecture
+
+```
+Raw XLSX (daily usage + subscriptions + marketplace orders)
+    │
+    ├─► Loaders — normalise ICCID, parse MCC area codes, convert KB → MB
+    │
+    ├─► Subscription Processor — match usage to subscription windows, compute ratio
+    │
+    ├─► Behaviour Factor Engine
+    │     ├── P50/P75 usage blend per SKU package
+    │     ├── 5-tier interpolation: EXACT → REGION → GLOBAL → NEAREST → CURVE
+    │     ├── Quota Feasibility Factor (QFF) — self-calibrating physics clamp
+    │     └── Isotonic regression smoothing (scikit-learn)
+    │
+    ├─► Pricing Calculation
+    │     ├── Weighted modal cost (MCC-resolved country rates)
+    │     ├── Log-linear formula calibrated from competitor data
+    │     └── SIM / eSIM / flat prices in IDR
+    │
+    ├─► Margin & Revenue Reconciliation
+    │     ├── Multi-channel order ingestion (Shopee, Tokopedia, Shopify)
+    │     ├── SKU normalisation + cross-platform fallback mapping
+    │     ├── ICCID-level cost matching via PostgreSQL
+    │     ├── Per-unit price correction (Shopify order-total → per-ICCID)
+    │     └── RUGI / NORMAL / BAGUS margin classification
+    │
+    └─► Outputs
+          ├── Google Sheets (live pricing + margin dashboard)
+          ├── Excel workbook (formula-driven, client-verifiable)
+          ├── 11-sheet Looker Studio BI export
+          └── LAN Flask web app (ICCID lookup for ops team)
+```
+
+---
+
+## Core Methodology
+
+### 1. Behaviour Score Engine
+
+The central innovation of the pricing model. Instead of pricing on quota alone, the engine computes a **behaviour score** (0–1) representing how intensively a customer segment actually uses a given package.
+
+- **P50/P75 usage ratio blend** — weighted median/75th-percentile mix to avoid outlier sensitivity
+- **5-tier interpolation fallback** when direct sample data is insufficient:
+  1. `EXACT` — direct sample from the same SKU
+  2. `REGION` — same geographic region (e.g. SEA, EU)
+  3. `GLOBAL` — all-product average
+  4. `NEAREST` — closest quota/duration match
+  5. `CURVE` — parametric curve fit from aggregate data
+- **Isotonic regression smoothing** (`sklearn.isotonic.IsotonicRegression`) enforces monotonic score curves per product type — ensuring longer durations never produce paradoxically higher scores than shorter ones
+
+### 2. Quota Feasibility Factor (QFF)
+
+A physics-informed clamping layer that prevents the pricing model from generating unrealistic prices for high-quota packages in low-throughput markets.
+
+- Self-calibrates each run from real usage data (no hardcoded thresholds)
+- Derived from GB/day throughput distributions per country × product type
+- Applied as a multiplicative clamp before the pricing formula
+
+### 3. Weighted Modal Cost
+
+Cost per SKU is not a static table lookup — it is a weighted average across the actual roaming countries visited by customers holding that package.
+
+- MCC (Mobile Country Code) strings extracted from raw usage records
+- Mapped to country names → CNY/GB rates via `mcc_map.json` + `country_rate.json`
+- Usage MB weights applied per country, then summed to a single CNY cost per subscription
+
+### 4. Log-Linear Pricing Formula
+
+The final sell price is computed via a log-linear model reverse-engineered from competitor pricing across 3 product types (BIG DATA, FUP, Unlimited), with quota and duration as predictors.
+
+- Mean absolute error: **~5.7%** vs. market benchmark on held-out SKUs
+- Monotonic price smoothing enforced post-formula via a 3-pass algorithm: cummax → minimum growth rate floor → spike cap — prevents pricing inversions and plateaus at IDR rounding boundaries
+
+### 5. Multi-Channel Margin Reconciliation
+
+The margin engine ingests order exports from Shopee, Tokopedia, and Shopify, normalises them to a canonical SKU format, and matches each ICCID against the PostgreSQL cost database.
+
+- **SKU normalisation** — regex prefix rules + JSON fallback map handle rebranding, marketplace-specific prefixes (`WG-`, `GM-`, `SM-`), and historical SKU migrations
+- **Shopify per-unit correction** — Shopify exports order totals, not per-unit prices; the engine corrects this by dividing by the pre-deduplication item count per invoice
+- **Backlog tracking** — unmatched ICCIDs written to `processed.margin_backlog` in PostgreSQL; auto-resolved on subsequent runs when subscription data becomes available
+- **Margin classification** — each ICCID tagged RUGI (loss) / NORMAL / BAGUS (≥30% margin) with conditional formatting in the Excel output and country-level breakdowns
 
 ---
 
 ## Features
 
-- **Behaviour Score Engine** — P50/P75 usage ratio blend per package with 5-tier interpolation fallback (EXACT → REGION → GLOBAL → NEAREST → CURVE)
-- **Quota Feasibility Factor (QFF)** — physics-informed clamp layer that self-calibrates from real usage data each run
-- **Weighted Modal Cost** — dynamic supplier cost derived from MCC-resolved country usage distribution, not static tables
-- **Market-calibrated pricing formula** — log-linear model reverse-engineered from competitor data with 5.7% mean error
-- **Isotonic regression smoothing** — enforces monotonic score curves per product type via scikit-learn
-- **Looker Studio BI export** — 11-sheet business intelligence export (executive summary, country breakdown, SKU profitability, churn/anomaly detection)
-- **ICCID Checker web app** — local LAN Flask app for per-SIM usage and cost lookup by team
+| Feature | Description |
+|---------|-------------|
+| Behaviour Score Engine | P50/P75 blend + 5-tier interpolation + isotonic smoothing |
+| Quota Feasibility Factor | Self-calibrating physics clamp from real usage data |
+| Weighted Modal Cost | MCC-resolved dynamic COGS, not static rate lookup |
+| Log-linear pricing formula | Market-calibrated, ~5.7% error vs. benchmark |
+| Multi-channel reconciliation | Shopee, Tokopedia, Shopify — unified margin view |
+| Margin classification | RUGI / NORMAL / BAGUS per ICCID with backlog tracking |
+| Looker Studio BI export | 11-sheet export: executive summary, country analysis, SKU profitability, churn/anomaly detection |
+| ICCID Checker web app | Local LAN Flask app — per-SIM usage, cost, and country breakdown |
+| Live Google Sheets publish | Pricing and margin data pushed automatically each run |
+| Formula-driven Excel output | All calculations in Excel formulas — fully auditable by non-technical stakeholders |
 
 ---
 
 ## Tech Stack
 
 | Layer | Tools |
-|---|---|
+|-------|-------|
 | Language | Python 3.10+ |
 | Data processing | Pandas, NumPy |
 | Statistical modelling | SciPy (`curve_fit`, `lstsq`), scikit-learn (`IsotonicRegression`) |
+| Database | PostgreSQL (SQLAlchemy, psycopg2) |
 | API integration | gspread, Google Sheets API v4, Google Drive API |
-| Web app | Flask, psycopg2, PostgreSQL |
-| Config | JSON-based country, MCC, and rate mappings |
-| Output | Google Sheets (live publish), Excel (.xlsx), CSV (Looker Studio) |
+| Web app | Flask |
+| Output formats | Google Sheets (live), Excel (openpyxl), CSV (Looker Studio) |
+| Config | JSON-based country, MCC, SKU, and rate mappings |
 
 ---
 
@@ -54,43 +147,40 @@ A data pipeline built for a telecom reseller operating in the eSIM market. The s
 ### Prerequisites
 
 - Python 3.10+
-- PostgreSQL (for the web app only)
+- PostgreSQL (for the web app and margin engine)
 - Google Cloud project with Sheets API + Drive API enabled
 - Service account credentials JSON
 
 ### Setup
 
 ```bash
-# 1. Clone the repo
-git clone <repo-url>
+# 1. Clone
+git clone https://github.com/Irsyad-g/pricing-pipeline.git
 cd pricing-pipeline
 
-# 2. Create and activate virtual environment
+# 2. Virtual environment
 python -m venv .venv
 .venv\Scripts\activate        # Windows
 source .venv/bin/activate     # macOS / Linux
 
-# 3. Install dependencies
+# 3. Dependencies
 pip install -r requirements.txt
 
-# 4. Add Google credentials
-# Place your service account JSON at:
-#   config/google_credentials.json
+# 4. Google credentials
+# Place service account JSON at: config/google_credentials.json
 
-# 5. Configure data mappings (edit to match your product codes)
-#   data/mappings/country_map.json   — product code → country/group/region
-#   data/mappings/country_rate.json  — country → CNY/GB rate
-#   data/mappings/mcc_map.json       — MCC code → country name
+# 5. Configure mappings
+# data/mappings/country_map.json   — product code → country / group / region
+# data/mappings/country_rate.json  — country → CNY/GB rate  (gitignored — add manually)
+# data/mappings/mcc_map.json       — MCC code → country name
 ```
 
-### Web app (optional, requires PostgreSQL)
+### Web app (requires PostgreSQL)
 
 ```bash
 cd webapp
 cp .env.example .env
 # Fill in: DB_HOST, DB_NAME, DB_USER, DB_PASSWORD
-
-pip install -r requirements.txt
 python app.py
 # Team access: http://<your-local-ip>:5000
 ```
@@ -99,15 +189,15 @@ python app.py
 
 ## Usage
 
-### Run full pricing pipeline
+### Full pricing pipeline
 
 ```bash
 python main.py
 ```
 
-Reads XLSX files from `data/raw/`, runs all pipeline stages, publishes results to Google Sheets.
+Reads XLSX files from `data/raw/`, runs all pipeline stages, publishes pricing to Google Sheets.
 
-### Export Looker Studio / BI data
+### Looker Studio / BI export
 
 ```bash
 python -m exporters.looker_export
@@ -115,45 +205,10 @@ python -m exporters.looker_export
 
 Outputs 11 CSV files + 1 Excel workbook to `data/output/looker/`.
 
-### Launch ICCID Checker web app
+### ICCID Checker web app
 
 ```bash
 cd webapp && python app.py
-```
-
-Access at `http://localhost:5000`. For LAN team access, use `http://<your-ip>:5000`.
-
----
-
-## Pipeline Architecture
-
-```
-Raw XLSX (daily usage + subscriptions)
-    │
-    ▼
-Loaders — normalise ICCID, parse MCC area codes, convert KB → MB
-    │
-    ▼
-Subscription Processor — match usage to subscription windows, compute usage ratio
-    │
-    ▼
-Behaviour Factor Engine
-  ├── P50/P75 blend per package
-  ├── 5-tier interpolation: EXACT → REGION → GLOBAL → NEAREST → CURVE
-  ├── QFF clamping (self-calibrating each run)
-  └── Isotonic regression smoothing
-    │
-    ▼
-Full SKU Matrix — (country × quota × 1–30 days) for all known countries
-    │
-    ▼
-Pricing Calculation
-  ├── Weighted modal cost (MCC-resolved country rates)
-  ├── Product-type pricing formula (log-linear for BIG DATA)
-  └── SIM / eSIM / flat prices in IDR
-    │
-    ▼
-Google Sheets publish + Excel export
 ```
 
 ---
@@ -163,20 +218,20 @@ Google Sheets publish + Excel export
 ```
 pricing-pipeline/
 ├── config/
-│   ├── mappings.py               # Re-exports from behaviour_factor
+│   ├── commission.py             # Channel × product commission rates
 │   └── paths.py                  # Project root + data path definitions
 ├── data/
-│   ├── mappings/                 # country_map.json, mcc_map.json, country_rate.json
+│   ├── mappings/                 # country_map.json, mcc_map.json, sku_fallback.json
 │   ├── raw/                      # Input XLSX files (gitignored)
 │   └── output/                   # Pipeline outputs (gitignored)
 ├── loaders/
-│   ├── load_daily.py             # Daily usage ingestion (parallel)
+│   ├── load_daily.py             # Daily usage ingestion
 │   └── load_subscription.py      # Subscription data ingestion
 ├── processors/
-│   ├── behaviour_factor.py       # Core BF + QFF engine + interpolation
-│   ├── subscription_processor.py # Usage-to-subscription join + ratio calc
-│   ├── cost_calculator.py        # Weighted modal cost
-│   └── normalize_cross_type.py   # Monotonic price normalization
+│   ├── behaviour_factor.py       # Core BF + QFF engine + 5-tier interpolation
+│   ├── subscription_processor.py # Usage-to-subscription join + ratio calculation
+│   ├── cost_calculator.py        # Weighted modal cost + order matching
+│   └── normalize_cross_type.py   # Monotonic price normalisation
 ├── exporters/
 │   ├── google_sheets_exporter.py # Pricing calc + live Sheets publish
 │   ├── db_exporter.py            # PostgreSQL export
@@ -184,32 +239,19 @@ pricing-pipeline/
 ├── rules/
 │   └── quota_rules.py            # Quota MB extraction from package names
 ├── pivots/
-│   └── country_usage_pivot.py
+│   └── country_usage_pivot.py    # Country usage cross-tab
 ├── summaries/
-│   └── summary.py
+│   └── summary.py                # Aggregate usage summaries
 ├── webapp/
 │   ├── app.py                    # Flask ICCID Checker (local LAN)
 │   ├── templates/index.html      # Web UI
-│   ├── requirements.txt
 │   └── .env.example
-├── main.py                       # Pipeline entry point
+├── main.py                       # Pricing pipeline entry point
 └── README.md
 ```
 
 ---
 
-## Future Improvements
+## Privacy
 
-- [ ] Unify CNY→IDR conversion rate across all modules (currently split: 2450 vs 2650)
-- [ ] Replace positional `iloc` column access in loaders with named columns
-- [ ] Expand `mcc_map.json` from 56 entries to full ITU MCC list (~250 countries)
-- [ ] Add CLI flags to `main.py` (e.g. `--dry-run`, `--skip-export`, `--date-range`)
-- [ ] Schedule pipeline runs via cron / Windows Task Scheduler
-- [ ] Telegram or email alerts on EXPIRING_SOON / ANOMALY_HIGH flags from BI export
-- [ ] Unit tests for quota extraction, BF interpolation, and cost calculation
-
----
-
-## Privacy Note
-
-Repository contains source code only. All customer data, supplier pricing, credentials, and raw XLSX files are excluded via `.gitignore`.
+Repository contains source code only. All customer data, supplier pricing, credentials, raw XLSX files, and operational scripts are excluded via `.gitignore`.

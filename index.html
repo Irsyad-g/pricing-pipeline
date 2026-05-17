@@ -391,12 +391,13 @@
 <!-- HERO -->
 <section class="hero">
   <div class="hero-text fade-up">
-    <div class="hero-eyebrow">Data Analytics · Automation</div>
+    <div class="hero-eyebrow">Data Engineering · Pricing Intelligence</div>
     <h1>Irsyad <em>G.</em></h1>
-    <p class="hero-tagline">Data Analyst &nbsp;·&nbsp; Pricing Automation &nbsp;·&nbsp; Aspiring Data Engineer</p>
+    <p class="hero-tagline">Data Analyst &nbsp;·&nbsp; Pipeline Engineer &nbsp;·&nbsp; Pricing Automation</p>
     <p class="hero-desc">
-      I build data pipelines and automation tools that turn messy operational data into
-      clear, actionable outputs — from pricing engines to business intelligence exports.
+      I build production data pipelines that replace manual processes entirely — from
+      behaviour-driven pricing engines generating 10,800+ SKUs per run, to multi-channel
+      margin reconciliation systems serving live business decisions.
     </p>
     <div class="hero-cta">
       <a href="#projects" class="btn btn-primary">View Projects</a>
@@ -506,11 +507,13 @@
         <div class="project-num">01</div>
         <div class="project-title">eSIM Pricing Automation Pipeline</div>
         <p class="project-desc">
-          End-to-end Python pipeline that replaces a fully manual pricing process.
-          Ingests raw daily usage and subscription XLSX files, computes behaviour-adjusted
-          cost estimates per SKU using a 5-tier interpolation model, and publishes
-          10,800+ prices to Google Sheets automatically each run. Includes a market-calibrated
-          log-linear pricing formula (5.7% error vs. benchmark) and isotonic regression smoothing.
+          End-to-end Python pipeline replacing a fully manual pricing process for a
+          multi-country telecom eSIM reseller. Computes behaviour-adjusted cost estimates
+          using a P50/P75 usage blend with 5-tier interpolation fallback (EXACT → REGION →
+          GLOBAL → NEAREST → CURVE), applies a self-calibrating Quota Feasibility Factor,
+          then prices via a log-linear model calibrated from competitor data (5.7% error).
+          Isotonic regression smoothing enforces monotonic price curves. Publishes 10,800+
+          SKUs to Google Sheets automatically each run.
         </p>
         <div class="project-tags">
           <span class="tag">Python</span>
@@ -567,6 +570,33 @@
         </div>
       </div>
       <span class="project-badge badge-orange">Internal</span>
+    </div>
+
+    <!-- Project 4 -->
+    <div class="project-card">
+      <div>
+        <div class="project-num">04</div>
+        <div class="project-title">Multi-Channel Margin Reconciliation Engine</div>
+        <p class="project-desc">
+          Revenue intelligence engine that reconciles order exports from Shopee, Tokopedia,
+          and Shopify against actual COGS from the pricing pipeline database. Handles
+          SKU normalisation across platforms, corrects Shopify's order-total pricing to
+          per-unit via pre-dedup item counts, and classifies each ICCID as profitable
+          (BAGUS ≥30%), breakeven (NORMAL), or loss-making (RUGI). Produces a formula-driven
+          Excel workbook auditable by non-technical stakeholders, a Google Sheets live
+          dashboard, and a persistent PostgreSQL backlog for unresolved orders with
+          auto-resolution on subsequent runs.
+        </p>
+        <div class="project-tags">
+          <span class="tag">Python</span>
+          <span class="tag">Pandas</span>
+          <span class="tag">PostgreSQL</span>
+          <span class="tag">Google Sheets API</span>
+          <span class="tag">openpyxl</span>
+          <span class="tag">Revenue Analytics</span>
+        </div>
+      </div>
+      <span class="project-badge badge-green">Live</span>
     </div>
 
   </div>
